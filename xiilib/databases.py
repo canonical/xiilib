@@ -123,37 +123,3 @@ class Databases(ops.Object):  # pylint: disable=too-few-public-methods
         self._charm = charm
         self._application = application
         self._databases = database_requirers
-        for database_requirer in database_requirers.values():
-            self._charm.framework.observe(
-                database_requirer.on.database_created, self._on_database_requires_event
-            )
-            self._charm.framework.observe(
-                self._charm.on[database_requirer.relation_name].relation_broken,
-                self._on_database_requires_event,
-            )
-
-    def _update_status(self, status: ops.StatusBase) -> None:
-        """Update the application and unit status.
-
-        Args:
-            status: the desired application and unit status.
-        """
-        self._charm.unit.status = status
-        if self._charm.unit.is_leader():
-            self._charm.app.status = status
-
-    def _restart(self) -> None:
-        """Restart or start the service if not started with the latest configuration."""
-        try:
-            self._application.restart()
-            self._update_status(ops.ActiveStatus())
-        except CharmConfigInvalidError as exc:
-            self._update_status(ops.BlockedStatus(exc.msg))
-
-    def _on_database_requires_event(self, _event: DatabaseRequiresEvent) -> None:
-        """Configure the pebble service layer in case of DatabaseRequiresEvent.
-
-        Args:
-            _event: the database-requires-changed event that trigger this callback function.
-        """
-        self._restart()

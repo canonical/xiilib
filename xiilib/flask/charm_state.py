@@ -26,7 +26,7 @@ from xiilib.flask.secret_storage import FlaskSecretStorage
 from xiilib.webserver import WebserverConfig
 
 if typing.TYPE_CHECKING:
-    from charm import FlaskCharm
+    from charm import Charm
 
 KNOWN_CHARM_CONFIG = (
     "database_migration_script",
@@ -178,7 +178,7 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
 
     @classmethod
     def from_charm(
-        cls, charm: "FlaskCharm", secret_storage: FlaskSecretStorage, database_uris: dict[str, str]
+        cls, charm: "Charm", secret_storage: FlaskSecretStorage, database_uris: dict[str, str]
     ) -> "CharmState":
         """Initialize a new instance of the CharmState class from the associated charm.
 

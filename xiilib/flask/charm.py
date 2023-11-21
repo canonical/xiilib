@@ -5,9 +5,12 @@
 """Flask Charm service."""
 
 import logging
+import pathlib
+import textwrap
 import typing
 
 import ops
+from charms.data_platform_libs.v0.data_interfaces import DatabaseRequiresEvent
 from charms.traefik_k8s.v2.ingress import IngressPerAppRequirer
 from xiilib.database_migration import DatabaseMigration, DatabaseMigrationStatus
 from xiilib.databases import Databases, get_uris, make_database_requirers
@@ -21,14 +24,14 @@ from xiilib.flask.constants import (
     FLASK_STATE_DIR,
 )
 from xiilib.flask.flask_app import FlaskApp
-from xiilib.flask.observability import FlaskObservability
 from xiilib.flask.secret_storage import FlaskSecretStorage
+from xiilib.observability import Observability
 from xiilib.webserver import GunicornWebserver
 
 logger = logging.getLogger(__name__)
 
 
-class FlaskCharm(ops.CharmBase):
+class Charm(ops.CharmBase):
     """Flask Charm service."""
 
     def __init__(self, *args: typing.Any) -> None:
@@ -38,6 +41,7 @@ class FlaskCharm(ops.CharmBase):
             args: passthrough to CharmBase.
         """
         super().__init__(*args)
+        self.okay = True
         self._secret_storage = FlaskSecretStorage(charm=self)
         database_requirers = make_database_requirers(self, "flask-app")
 
@@ -49,6 +53,7 @@ class FlaskCharm(ops.CharmBase):
             )
         except CharmConfigInvalidError as exc:
             self._update_app_and_unit_status(ops.BlockedStatus(exc.msg))
+            self.okay = False
             return
 
         self._database_migration = DatabaseMigration(
@@ -79,9 +84,28 @@ class FlaskCharm(ops.CharmBase):
             port=self._charm_state.port,
             strip_prefix=True,
         )
-        self._observability = FlaskObservability(charm=self, charm_state=self._charm_state)
+        self._observability = Observability(
+            self,
+            charm_state=self._charm_state,
+            container_name=FLASK_CONTAINER_NAME,
+            cos_dir=str((pathlib.Path(__file__).parent / "cos").absolute()),
+        )
+        self.supported_events = {
+            "rotate_secret_key_action": self.on.rotate_secret_key_action,
+            "secret_storage_relation_changed": self.on.secret_storage_relation_changed,
+            "flask_app_pebble_ready": self.on.flask_app_pebble_ready,
+            "update_status": self.on.update_status,
+            "statsd_prometheus_exporter_pebble_ready": self.on.statsd_prometheus_exporter_pebble_ready,
+        }
+        for database, database_requirer in database_requirers.items():
+            self.supported_events[
+                f"{database}_database_database_created"
+            ] = database_requirer.on.database_created
+            self.supported_events[f"{database}_database_relation_broken"] = self.on[
+                database_requirer.relation_name
+            ].relation_broken
 
-    def on_config_changed(self, _event: ops.EventBase) -> None:
+    def _on_config_changed(self, _event: ops.EventBase) -> None:
         """Configure the flask pebble service layer.
 
         Args:
@@ -89,7 +113,7 @@ class FlaskCharm(ops.CharmBase):
         """
         self._restart_flask()
 
-    def on_rotate_secret_key_action(self, event: ops.ActionEvent) -> None:
+    def _on_rotate_secret_key_action(self, event: ops.ActionEvent) -> None:
         """Handle the rotate-secret-key action.
 
         Args:
@@ -105,7 +129,7 @@ class FlaskCharm(ops.CharmBase):
         event.set_results({"status": "success"})
         self._restart_flask()
 
-    def on_secret_storage_relation_changed(self, _event: ops.RelationEvent) -> None:
+    def _on_secret_storage_relation_changed(self, _event: ops.RelationEvent) -> None:
         """Handle the secret-storage-relation-changed event.
 
         Args:
@@ -131,11 +155,67 @@ class FlaskCharm(ops.CharmBase):
         except CharmConfigInvalidError as exc:
             self._update_app_and_unit_status(ops.BlockedStatus(exc.msg))
 
-    def on_update_status(self, _: ops.HookEvent) -> None:
+    def _on_update_status(self, _: ops.HookEvent) -> None:
         """Handle the update-status event."""
         if self._database_migration.get_status() == DatabaseMigrationStatus.FAILED:
             self._restart_flask()
 
-    def on_flask_app_pebble_ready(self, _: ops.PebbleReadyEvent) -> None:
+    def _on_flask_app_pebble_ready(self, _: ops.PebbleReadyEvent) -> None:
         """Handle the pebble-ready event."""
+        self._restart_flask()
+
+    def _on_statsd_prometheus_exporter_pebble_ready(
+        self, _event: ops.PebbleReadyEvent
+    ) -> None:
+        """Handle the statsd-prometheus-exporter-pebble-ready event."""
+        container = self.unit.get_container("statsd-prometheus-exporter")
+        container.push(
+            "/statsd.conf",
+            textwrap.dedent(
+                """\
+                mappings:
+                  - match: gunicorn.request.status.*
+                    name: flask_response_code
+                    labels:
+                      status: $1
+                  - match: gunicorn.requests
+                    name: flask_requests
+                  - match: gunicorn.request.duration
+                    name: flask_request_duration
+                """
+            ),
+        )
+        statsd_layer = ops.pebble.LayerDict(
+            summary="statsd exporter layer",
+            description="statsd exporter layer",
+            services={
+                "statsd-prometheus-exporter": {
+                    "override": "replace",
+                    "summary": "statsd exporter service",
+                    "user": "nobody",
+                    "command": "/bin/statsd_exporter --statsd.mapping-config=/statsd.conf",
+                    "startup": "enabled",
+                }
+            },
+            checks={
+                "container-ready": {
+                    "override": "replace",
+                    "level": "ready",
+                    "http": {"url": "http://localhost:9102/metrics"},
+                },
+            },
+        )
+        container.add_layer("statsd-prometheus-exporter", statsd_layer, combine=True)
+        container.replan()
+
+    def _on_mysql_database_database_created(self, _event: DatabaseRequiresEvent):
+        self._restart_flask()
+
+    def _on_mysql_database_relation_broken(self, _event: ops.RelationBrokenEvent):
+        self._restart_flask()
+
+    def _on_postgresql_database_database_created(self, _event: DatabaseRequiresEvent):
+        self._restart_flask()
+
+    def _on_postgresql_database_relation_broken(self, _event: ops.RelationBrokenEvent):
         self._restart_flask()
