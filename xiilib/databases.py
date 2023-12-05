@@ -9,20 +9,18 @@ import typing
 
 import ops
 import yaml
-from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires, DatabaseRequiresEvent
-
-from xiilib.exceptions import CharmConfigInvalidError
+from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
 
 SUPPORTED_DB_INTERFACES = {"mysql_client": "mysql", "postgresql_client": "postgresql"}
 
 logger = logging.getLogger(__name__)
 
 
-class Application(typing.Protocol):
-    """Interface for the charm managed application"""
+class Application(typing.Protocol):  # pylint: disable=too-few-public-methods
+    """Interface for the charm managed application."""
 
-    def restart(self):
-        """Restart the application"""
+    def restart(self) -> None:
+        """Restart the application."""
 
 
 def make_database_requirers(

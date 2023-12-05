@@ -1,0 +1,6 @@
+# Copyright 2023 Canonical Ltd.
+# See LICENSE file for licensing details.
+rotate-secret-key:
+  description: >
+    Rotate the flask secret key. Users will be forced to log in again.
+    This might be useful if a security breach occurs.

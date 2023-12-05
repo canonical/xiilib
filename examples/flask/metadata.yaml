@@ -1,0 +1,56 @@
+# Copyright 2023 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+name: flask-k8s
+display-name: Flask
+summary: Turn any Flask application into a charm.
+description: Flask charm can turn any Flask application into a charm.
+docs: https://discourse.charmhub.io/t/flask-k8s-charm-documentation-overview/10776
+issues: https://github.com/canonical/flask-k8s-operator/issues
+source: https://github.com/canonical/flask-k8s-operator
+maintainers:
+  - https://launchpad.net/~canonical-is-devops
+
+assumes:
+  - k8s-api
+
+containers:
+  flask-app:
+    resource: flask-app-image
+  statsd-prometheus-exporter:
+    resource: statsd-prometheus-exporter-image
+
+resources:
+  flask-app-image:
+    type: oci-image
+    description: Flask application image.
+  statsd-prometheus-exporter-image:
+    type: oci-image
+    description: Prometheus exporter for statsd data
+    upstream-source: prom/statsd-exporter:v0.24.0
+
+provides:
+  metrics-endpoint:
+    interface: prometheus_scrape
+  grafana-dashboard:
+    interface: grafana_dashboard
+
+peers:
+  secret-storage:
+    interface: secret-storage
+
+requires:
+  ingress:
+    interface: ingress
+    limit: 1
+    optional: true
+  mysql:
+    interface: mysql_client
+    limit: 1
+    optional: true
+  postgresql:
+    interface: postgresql_client
+    limit: 1
+    optional: true
+  logging:
+    interface: loki_push_api
