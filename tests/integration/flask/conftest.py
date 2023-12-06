@@ -110,10 +110,6 @@ async def charm_file_fixture(pytestconfig: pytest.Config, ops_test: OpsTest) -> 
     if not charm_file:
         charm_file = await ops_test.build_charm(PROJECT_ROOT / "examples/flask")
     inject_venv(charm_file, PROJECT_ROOT / "xiilib")
-    shutil.copy(
-        pathlib.Path(charm_file).absolute(),
-        "/Users/weii-wang/PycharmProjects/xiilib/flask-k8s_ubuntu-22.04-amd64_modified.charm",
-    )
     return pathlib.Path(charm_file).absolute()
 
 
