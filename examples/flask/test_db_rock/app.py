@@ -4,9 +4,9 @@
 import os
 
 from flask import Flask, request
-from sqlalchemy import create_engine, inspect, Column, Integer, String
+from sqlalchemy import Column, Integer, String, create_engine, inspect
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.security import generate_password_hash
 
 app = Flask(__name__)

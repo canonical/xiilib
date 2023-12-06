@@ -8,9 +8,7 @@ from alembic import context
 
 sys.path.append(os.getcwd())
 
-from app import engine
-from app import Base
-
+from app import Base, engine
 
 config = context.config
 target_metadata = Base.metadata

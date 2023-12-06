@@ -73,7 +73,7 @@ hello_page = """\
 """
 
 
-@app.route('/', defaults={'_': ''})
+@app.route("/", defaults={"_": ""})
 @app.route("/<path:_>")
 def hello(_):
     return hello_page
