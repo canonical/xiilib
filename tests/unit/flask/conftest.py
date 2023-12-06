@@ -17,6 +17,7 @@ sys.path.extend(
     [str(PROJECT_ROOT / "examples/flask/lib"), str(PROJECT_ROOT / "examples/flask/src")]
 )
 
+print(sys.path)
 
 from examples.flask.src.charm import FlaskCharm
 from xiilib.database_migration import DatabaseMigrationStatus
