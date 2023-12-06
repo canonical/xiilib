@@ -109,6 +109,8 @@ async def charm_file_fixture(pytestconfig: pytest.Config, ops_test: OpsTest) -> 
     charm_file = pytestconfig.getoption("--charm-file")
     if not charm_file:
         charm_file = await ops_test.build_charm(PROJECT_ROOT / "examples/flask")
+    elif charm_file[0] != "/":
+        charm_file = PROJECT_ROOT / charm_file
     inject_venv(charm_file, PROJECT_ROOT / "xiilib")
     return pathlib.Path(charm_file).absolute()
 
@@ -145,10 +147,10 @@ async def build_charm_fixture(charm_file: str) -> str:
                     data = file.read()
                 new_charm_zip.writestr(item, data)
     charm_zip.close()
-    charm = "flask-k8s_ubuntu-22.04-amd64_modified.charm"
+    charm = pathlib.Path("flask-k8s_ubuntu-22.04-amd64_modified.charm").absolute()
     with open(charm, "wb") as new_charm_file:
         new_charm_file.write(new_charm.getvalue())
-    return f"./{charm}"
+    return str(charm)
 
 
 @pytest_asyncio.fixture(scope="module", name="flask_app")
