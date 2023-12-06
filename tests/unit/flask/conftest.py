@@ -4,7 +4,6 @@
 """pytest fixtures for the integration test."""
 import os
 import pathlib
-import sys
 import typing
 import unittest.mock
 
@@ -12,16 +11,11 @@ import ops
 import pytest
 from ops.testing import Harness
 
-PROJECT_ROOT = pathlib.Path(__file__).parent.parent.parent.parent
-sys.path.extend(
-    [str(PROJECT_ROOT / "examples/flask/lib"), str(PROJECT_ROOT / "examples/flask/src")]
-)
-
-print(sys.path)
-
 from examples.flask.src.charm import FlaskCharm
 from xiilib.database_migration import DatabaseMigrationStatus
 from xiilib.flask.constants import FLASK_CONTAINER_NAME
+
+PROJECT_ROOT = pathlib.Path(__file__).parent.parent.parent.parent
 
 
 @pytest.fixture(autouse=True, scope="package")
