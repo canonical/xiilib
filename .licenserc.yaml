@@ -24,7 +24,7 @@ header:
     - '**/icon.svg'
     - '**/LICENSE'
     - '**/trivy.yaml'
-    - 'lib/charms/**'
+    - '**/lib/charms/**'
     - '**/grafana_dashboards/**'
     - '**/loki_alert_rules/**'
     - '**/prometheus_alert_rules/**'
