@@ -1,0 +1,29 @@
+# Copyright 2023 Canonical Ltd.
+# See LICENSE file for licensing details.
+name: test-flask
+summary: A flask test app
+description: OCI image for the test flask app
+version: "0.1"
+base: bare
+build-base: ubuntu:22.04
+license: Apache-2.0
+platforms:
+  amd64:
+
+parts:
+  flask-dependencies:
+    plugin: python
+    source: .
+    stage-packages:
+      - python3-venv
+    python-packages:
+      - gunicorn
+    python-requirements:
+      - requirements.txt
+  flask-app:
+    plugin: dump
+    source: .
+    organize:
+      "*": flask/app/
+    prime:
+      - flask/app

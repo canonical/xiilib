@@ -3,7 +3,6 @@
 
 """Provide the SecretStorage for managing the persistent secret storage for charms."""
 import abc
-import secrets
 import typing
 
 import ops
@@ -37,11 +36,7 @@ class SecretStorage(ops.Object, abc.ABC):
 
     @abc.abstractmethod
     def gen_initial_value(self) -> dict[str, str]:
-        """Generate the initial secret values.
-
-        Returns:
-            The initial secret values.
-        """
+        """Generate the initial secret values."""
 
     def _on_secret_storage_relation_created(self, event: ops.RelationEvent) -> None:
         """Handle the event when a new peer relation is created.
