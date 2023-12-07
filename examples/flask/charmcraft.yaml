@@ -1,6 +1,11 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
+name: flask-k8s
+summary: Turn any Flask application into a charm.
+description: Flask charm can turn any Flask application into a charm.
+
 type: charm
+
 bases:
   - build-on:
       - name: ubuntu
@@ -8,8 +13,135 @@ bases:
     run-on:
       - name: ubuntu
         channel: "22.04"
+
 parts:
   charm:
     build-packages:
       - cargo
       - rustc
+
+config:
+  options:
+    database_migration_script:
+      type: string
+      description: >-
+        Specifies the relative path from /flask/app that points to a shell script
+        executing database migrations for the Flask application. This script is
+        designed to run once for each Flask container unit. However, users must ensure:
+        1. The script can be executed multiple times without issues;
+        2. Concurrent migrations from different units are safe.
+        In case of migration failure, the charm will re-attempt during the 
+        update-status event. Successful database migration in a container ensures that
+        any configuration updates won't trigger another migration unless 
+        the Flask container is upgraded or restarted.
+    flask_application_root:
+      type: string
+      description: >-
+        Path in which the application / web server is mounted. This configuration
+        will set the FLASK_APPLICATION_ROOT environment variable. Run
+        `app.config.from_prefixed_env()` in your Flask application in order to receive
+        this configuration.
+    flask_debug:
+      type: boolean
+      description: Whether Flask debug mode is enabled.
+    flask_env:
+      type: string
+      description: >-
+        What environment the Flask app is running in, by default it's 'production'.
+    flask_permanent_session_lifetime:
+      type: int
+      description: >-
+        Time in seconds for the cookie to expire in the Flask application permanent
+        sessions. This configuration will set the FLASK_PERMANENT_SESSION_LIFETIME
+        environment variable. Run `app.config.from_prefixed_env()` in your Flask
+        application in order to receive this configuration.
+    flask_preferred_url_scheme:
+      type: string
+      default: HTTPS
+      description: >-
+        Scheme for generating external URLs when not in a request context in the Flask
+        application. By default, it's "HTTPS". This configuration will set the
+        FLASK_PREFERRED_URL_SCHEME environment variable. Run
+        `app.config.from_prefixed_env()` in your Flask application in order to receive
+        this configuration.
+    flask_secret_key:
+      type: string
+      description: >-
+        The secret key used for securely signing the session cookie and for any other
+        security related needs by your Flask application. This configuration will set
+        the FLASK_SECRET_KEY environment variable. Run `app.config.from_prefixed_env()`
+        in your Flask application in order to receive this configuration.
+    flask_session_cookie_secure:
+      type: boolean
+      description: >-
+        Set the secure attribute in the Flask application cookies. This configuration
+        will set the FLASK_SESSION_COOKIE_SECURE environment variable. Run
+        `app.config.from_prefixed_env()` in your Flask application in order to receive
+        this configuration.
+    webserver_keepalive:
+      type: int
+      description: >-
+        Time in seconds for webserver to wait for requests on a Keep-Alive connection.
+    webserver_threads:
+      type: int
+      description: Run each webserver worker with the specified number of threads.
+    webserver_timeout:
+      type: int
+      description: Time in seconds to kill and restart silent webserver workers.
+    webserver_workers:
+      type: int
+      description: The number of webserver worker processes for handling requests.
+    webserver_wsgi_path:
+      type: string
+      default: "app:app"
+      description: The WSGI application path. By default, it's set to "app:app".
+
+actions:
+  rotate-secret-key:
+    description: >
+      Rotate the flask secret key. Users will be forced to log in again.
+      This might be useful if a security breach occurs.
+
+provides:
+  metrics-endpoint:
+    interface: prometheus_scrape
+  grafana-dashboard:
+    interface: grafana_dashboard
+
+peers:
+  secret-storage:
+    interface: secret-storage
+
+requires:
+  ingress:
+    interface: ingress
+    limit: 1
+    optional: true
+  mysql:
+    interface: mysql_client
+    limit: 1
+    optional: true
+  postgresql:
+    interface: postgresql_client
+    limit: 1
+    optional: true
+  logging:
+    interface: loki_push_api
+
+assumes:
+  - k8s-api
+
+containers:
+  flask-app:
+    resource: flask-app-image
+  statsd-prometheus-exporter:
+    resource: statsd-prometheus-exporter-image
+
+resources:
+  flask-app-image:
+    type: oci-image
+    description: Flask application image.
+  statsd-prometheus-exporter-image:
+    type: oci-image
+    description: Prometheus exporter for statsd data
+    upstream-source: prom/statsd-exporter:v0.24.0
