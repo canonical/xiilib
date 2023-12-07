@@ -67,9 +67,9 @@ def test_known_charm_config():
     act: none
     assert: KNOWN_CHARM_CONFIG in the consts module matches the content of config.yaml file.
     """
-    with open("config.yaml", encoding="utf-8") as config_file:
-        config = yaml.safe_load(config_file)
-    assert sorted(config["options"].keys()) == sorted(KNOWN_CHARM_CONFIG)
+    with open("charmcraft.yaml", encoding="utf-8") as config_file:
+        metadata = yaml.safe_load(config_file)
+    assert sorted(metadata["config"]["options"].keys()) == sorted(KNOWN_CHARM_CONFIG)
 
 
 def test_rotate_secret_key_action(harness: Harness):

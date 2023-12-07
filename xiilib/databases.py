@@ -35,7 +35,10 @@ def make_database_requirers(
     Returns: A dictionary which is the database uri environment variable name and the
         value is the corresponding database requirer object.
     """
-    metadata = yaml.safe_load(pathlib.Path("metadata.yaml").read_text(encoding="utf-8"))
+    metadata_file = pathlib.Path("metadata.yaml")
+    if not metadata_file.exists():
+        metadata_file = pathlib.Path("charmcraft.yaml")
+    metadata = yaml.safe_load(metadata_file.read_text(encoding="utf-8"))
     db_interfaces = (
         SUPPORTED_DB_INTERFACES[require["interface"]]
         for require in metadata["requires"].values()
