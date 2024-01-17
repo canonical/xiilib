@@ -70,7 +70,11 @@ def get_uris(database_requirers: typing.Dict[str, DatabaseRequires]) -> typing.D
     db_uris: typing.Dict[str, str] = {}
 
     for interface_name, db_requires in database_requirers.items():
-        relation_data = list(db_requires.fetch_relation_data().values())
+        relation_data = list(
+            db_requires.fetch_relation_data(
+                fields=["endpoints", "username", "password", "database"]
+            ).values()
+        )
 
         if not relation_data:
             continue
