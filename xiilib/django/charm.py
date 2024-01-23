@@ -4,6 +4,7 @@
 
 """Django Charm service."""
 import json
+import os
 import pathlib
 import secrets
 
@@ -44,9 +45,7 @@ class Charm(ops.CharmBase):
         )
         self._secrets = SecretStorage(
             charm=self,
-            initial_values={
-                self._SECRET_KEY_SECRET_STORAGE_KEY: secrets.token_urlsafe(32)
-            },
+            initial_values={self._SECRET_KEY_SECRET_STORAGE_KEY: secrets.token_urlsafe(32)},
         )
         self._ingress = IngressPerAppRequirer(
             self,
@@ -55,23 +54,33 @@ class Charm(ops.CharmBase):
         )
         self.framework.observe(self.on.upgrade_charm, self._on_upgrade_charm)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
-        self.framework.observe(
-            self.on.rotate_secret_key_action, self._on_rotate_secret_key_action
-        )
+        self.framework.observe(self.on.rotate_secret_key_action, self._on_rotate_secret_key_action)
         self.framework.observe(
             self.on.secret_storage_relation_changed,
             self._on_secret_storage_relation_changed,
         )
-        self.framework.observe(
-            self.on.django_app_pebble_ready, self._on_django_app_pebble_ready
-        )
+        self.framework.observe(self.on.django_app_pebble_ready, self._on_django_app_pebble_ready)
         self.framework.observe(self.on.update_status, self._on_update_status)
         self.framework.observe(
             self._databases.on.all_databases_ready, self._on_all_databases_ready
         )
 
     def _get_environment(self) -> dict[str, str]:
-        env = self._databases.get_uris()
+        known_configs = {
+            "django_allowed_hosts",
+            "django_debug",
+            "django_secret_key",
+            "webserver_keepalive",
+            "webserver_threads",
+            "webserver_timeout",
+            "webserver_workers",
+        }
+        env = {
+            f"DJANGO_{k.upper()}": v if isinstance(v, str) else json.dumps(v)
+            for k, v in self.config.items()
+            if k not in known_configs and f"django_{k}" not in known_configs
+        }
+        env = {**env, **self._databases.get_uris()}
         allowed_hosts = self.config.get("django_allowed_hosts")
         if allowed_hosts:
             env["DJANGO_ALLOWED_HOSTS"] = json.dumps(
@@ -97,9 +106,7 @@ class Charm(ops.CharmBase):
             return
 
         if not self._secrets.is_initialized:
-            self.unit.status = ops.WaitingStatus(
-                "Waiting for secret store initialization"
-            )
+            self.unit.status = ops.WaitingStatus("Waiting for secret store initialization")
             return
 
         if self._databases.get_uris():
@@ -145,9 +152,7 @@ class Charm(ops.CharmBase):
         if not self._secrets.is_initialized:
             event.fail("charm is still initializing")
             return
-        self._secrets.set_secret(
-            self._SECRET_KEY_SECRET_STORAGE_KEY, secrets.token_urlsafe(32)
-        )
+        self._secrets.set_secret(self._SECRET_KEY_SECRET_STORAGE_KEY, secrets.token_urlsafe(32))
         event.set_results({"status": "success"})
         self.reconcile()
 
