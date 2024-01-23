@@ -4,7 +4,6 @@
 
 """Django Charm service."""
 import json
-import os
 import pathlib
 import secrets
 
@@ -34,7 +33,10 @@ class Charm(ops.CharmBase):
             base_dir=self._BASE_DIR,
         )
         self._server = GunicornServer(
-            charm=self, container=self._CONTAINER_NAME, base_dir=self._BASE_DIR
+            charm=self,
+            container=self._CONTAINER_NAME,
+            base_dir=self._BASE_DIR,
+            service_name="django",
         )
         self._observability = Observability(
             charm=self,

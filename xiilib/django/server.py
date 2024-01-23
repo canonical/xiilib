@@ -27,11 +27,13 @@ class GunicornServer:
         charm: ops.CharmBase,
         container: str,
         base_dir: pathlib.Path,
+        service_name: str,
         statsd_host: str = "localhost:9125",
     ):
         self._charm = charm
         self._container = charm.unit.get_container(container)
         self._base_dir = base_dir.absolute()
+        self._service_name = service_name
         self._statsd_host = statsd_host
         self.access_log = "/var/log/gunicorn/access.log"
         self.error_log = "/var/log/gunicorn/access.log"
@@ -77,7 +79,6 @@ class GunicornServer:
         return True
 
     def apply(self, env: dict[str, str]) -> None:
-        service_name = "gunicorn"
         config_updated = self._refresh_config_file()
         self._container.make_dir("/var/log/gunicorn/", make_parents=True, user="_daemon_")
 
@@ -94,8 +95,9 @@ class GunicornServer:
             )
             raise WebserverError("gunicorn configuration check failed")
 
+        layer_files = self._container.list_files("/var/lib/pebble/default/layers/")
         original_layer = yaml.safe_load(
-            self._container.pull("/var/lib/pebble/default/layers/001-test-django.yaml").read()
+            self._container.pull(layer_files[0].path).read()
         )
         original_services = original_layer["services"]
         for service in original_services.values():
@@ -104,8 +106,8 @@ class GunicornServer:
         original_services["gunicorn"]["environment"] = {**original_env, **env}
         self._container.add_layer("test-django", original_layer, combine=True)
 
-        is_running = self._container.get_service(service_name).is_running()
+        is_running = self._container.get_service(self._service_name).is_running()
         if config_updated and is_running:
-            self._container.send_signal(signal.SIGHUP, service_name)
+            self._container.send_signal(signal.SIGHUP, self._service_name)
 
         self._container.replan()
