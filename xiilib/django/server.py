@@ -82,7 +82,7 @@ class GunicornServer:
         config_updated = self._refresh_config_file()
         self._container.make_dir("/var/log/gunicorn/", make_parents=True, user="_daemon_")
 
-        check_command = shlex.split(self._container.get_plan().services["gunicorn"].command)
+        check_command = shlex.split(self._container.get_plan().services[self._service_name].command)
         check_command.append("--check-config")
         exec_process = self._container.exec(check_command, environment=env)
         try:
@@ -102,8 +102,8 @@ class GunicornServer:
         original_services = original_layer["services"]
         for service in original_services.values():
             service["override"] = "replace"
-        original_env = original_services["gunicorn"].get("environment", {})
-        original_services["gunicorn"]["environment"] = {**original_env, **env}
+        original_env = original_services[self._service_name].get("environment", {})
+        original_services[self._service_name]["environment"] = {**original_env, **env}
         self._container.add_layer("test-django", original_layer, combine=True)
 
         is_running = self._container.get_service(self._service_name).is_running()
