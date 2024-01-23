@@ -9,6 +9,7 @@ import secrets
 
 import ops
 from ops import ActiveStatus
+from charms.traefik_k8s.v2.ingress import IngressPerAppRequirer
 
 from .databases import Databases, DatabasesEvents
 from .once import RunOnce, RunOnceStatus
@@ -46,6 +47,11 @@ class Charm(ops.CharmBase):
             initial_values={
                 self._SECRET_KEY_SECRET_STORAGE_KEY: secrets.token_urlsafe(32)
             },
+        )
+        self._ingress = IngressPerAppRequirer(
+            self,
+            port=self._server.port,
+            strip_prefix=True,
         )
         self.framework.observe(self.on.upgrade_charm, self._on_upgrade_charm)
         self.framework.observe(self.on.config_changed, self._on_config_changed)

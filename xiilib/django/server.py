@@ -35,6 +35,7 @@ class GunicornServer:
         self._statsd_host = statsd_host
         self.access_log = "/var/log/gunicorn/access.log"
         self.error_log = "/var/log/gunicorn/access.log"
+        self.port = 8000
 
     @property
     def _working_dir(self) -> str:
@@ -47,7 +48,7 @@ class GunicornServer:
         threads = self._charm.config.get("webserver_threads")
         config = textwrap.dedent(
             f"""\
-            bind = ['0.0.0.0:8000']
+            bind = ['0.0.0.0:{self.port}']
             chdir = {repr(self._working_dir)}
             accesslog = {repr(str(self.access_log))}
             errorlog = {repr(str(self.error_log))}
@@ -78,13 +79,9 @@ class GunicornServer:
     def apply(self, env: dict[str, str]) -> None:
         service_name = "gunicorn"
         config_updated = self._refresh_config_file()
-        self._container.make_dir(
-            "/var/log/gunicorn/", make_parents=True, user="_daemon_"
-        )
+        self._container.make_dir("/var/log/gunicorn/", make_parents=True, user="_daemon_")
 
-        check_command = shlex.split(
-            self._container.get_plan().services["gunicorn"].command
-        )
+        check_command = shlex.split(self._container.get_plan().services["gunicorn"].command)
         check_command.append("--check-config")
         exec_process = self._container.exec(check_command, environment=env)
         try:
@@ -98,9 +95,7 @@ class GunicornServer:
             raise WebserverError("gunicorn configuration check failed")
 
         original_layer = yaml.safe_load(
-            self._container.pull(
-                "/var/lib/pebble/default/layers/001-test-django.yaml"
-            ).read()
+            self._container.pull("/var/lib/pebble/default/layers/001-test-django.yaml").read()
         )
         original_services = original_layer["services"]
         for service in original_services.values():
