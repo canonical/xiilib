@@ -5,6 +5,7 @@
 import json
 import logging
 import shlex
+import typing
 
 import ops
 
@@ -95,12 +96,13 @@ class FlaskApp:  # pylint: disable=too-few-public-methods
             },
         )
 
-    def restart(self) -> None:
+    def restart(self, additional_env: typing.Optional[typing.Dict[str, str]] = None) -> None:
         """Restart or start the flask service if not started with the latest configuration.
 
         Raises:
              CharmConfigInvalidError: if the configuration is not valid.
         """
+        env = {**self._flask_environment(), **additional_env}
         container = self._charm.unit.get_container("flask-app")
         if not container.can_connect():
             logger.info("pebble client in the Flask container is not ready")
@@ -111,10 +113,10 @@ class FlaskApp:  # pylint: disable=too-few-public-methods
         container.add_layer("flask", self._flask_layer(), combine=True)
         is_webserver_running = container.get_service(FLASK_SERVICE_NAME).is_running()
         self._webserver.update_config(
-            environment=self._flask_environment(),
+            environment=env,
             is_webserver_running=is_webserver_running,
         )
-        self._database_migration.run(self._flask_environment(), working_dir=FLASK_APP_DIR)
+        self._database_migration.run(env, working_dir=FLASK_APP_DIR)
         container.replan()
         if (
             self._database_migration.get_completed_script() is not None

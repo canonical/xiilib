@@ -118,7 +118,7 @@ class Charm(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
         Args:
             _event: the config-changed event that triggers this callback function.
         """
-        self._restart_flask()
+        self.restart_flask()
 
     def _on_rotate_secret_key_action(self, event: ops.ActionEvent) -> None:
         """Handle the rotate-secret-key action.
@@ -134,7 +134,7 @@ class Charm(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
             return
         self._secret_storage.reset_flask_secret_key()
         event.set_results({"status": "success"})
-        self._restart_flask()
+        self.restart_flask()
 
     def _on_secret_storage_relation_changed(self, _event: ops.RelationEvent) -> None:
         """Handle the secret-storage-relation-changed event.
@@ -142,7 +142,7 @@ class Charm(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
         Args:
             _event: the action event that triggers this callback.
         """
-        self._restart_flask()
+        self.restart_flask()
 
     def _update_app_and_unit_status(self, status: ops.StatusBase) -> None:
         """Update the application and unit status.
@@ -154,7 +154,7 @@ class Charm(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
         if self.unit.is_leader():
             self.app.status = status
 
-    def _restart_flask(self) -> None:
+    def restart_flask(self) -> None:
         """Restart or start the flask service if not started with the latest configuration."""
         try:
             self._flask_app.restart()
@@ -165,11 +165,11 @@ class Charm(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
     def _on_update_status(self, _: ops.HookEvent) -> None:
         """Handle the update-status event."""
         if self._database_migration.get_status() == DatabaseMigrationStatus.FAILED:
-            self._restart_flask()
+            self.restart_flask()
 
     def _on_flask_app_pebble_ready(self, _: ops.PebbleReadyEvent) -> None:
         """Handle the pebble-ready event."""
-        self._restart_flask()
+        self.restart_flask()
 
     def _on_statsd_prometheus_exporter_pebble_ready(self, _event: ops.PebbleReadyEvent) -> None:
         """Handle the statsd-prometheus-exporter-pebble-ready event."""
@@ -215,16 +215,16 @@ class Charm(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
 
     def _on_mysql_database_database_created(self, _event: DatabaseRequiresEvent) -> None:
         """Handle the mysql's database-created event."""
-        self._restart_flask()
+        self.restart_flask()
 
     def _on_mysql_database_relation_broken(self, _event: ops.RelationBrokenEvent) -> None:
         """Handle the mysql's relation-broken event."""
-        self._restart_flask()
+        self.restart_flask()
 
     def _on_postgresql_database_database_created(self, _event: DatabaseRequiresEvent) -> None:
         """Handle the postgresql's database-created event."""
-        self._restart_flask()
+        self.restart_flask()
 
     def _on_postgresql_database_relation_broken(self, _event: ops.RelationBrokenEvent) -> None:
         """Handle the postgresql's relation-broken event."""
-        self._restart_flask()
+        self.restart_flask()
