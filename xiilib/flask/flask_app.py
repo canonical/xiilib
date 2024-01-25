@@ -101,9 +101,6 @@ class FlaskApp:  # pylint: disable=too-few-public-methods
         Raises:
              CharmConfigInvalidError: if the configuration is not valid.
         """
-        env = self._flask_environment()
-        if additional_env is not None:
-            env.update(additional_env)
         container = self._charm.unit.get_container("flask-app")
         if not container.can_connect():
             logger.info("pebble client in the Flask container is not ready")
@@ -111,6 +108,9 @@ class FlaskApp:  # pylint: disable=too-few-public-methods
         if not self._charm_state.is_secret_storage_ready:
             logger.info("secret storage is not initialized")
             return
+        env = self._flask_environment()
+        if additional_env is not None:
+            env.update(additional_env)
         container.add_layer("flask", self._flask_layer(env), combine=True)
         is_webserver_running = container.get_service(FLASK_SERVICE_NAME).is_running()
         self._webserver.update_config(
