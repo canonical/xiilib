@@ -16,7 +16,10 @@ setup(
     author="Canonical IS DevOps team",
     author_email="is-devops-team@canonical.com",
     install_requires=requirements,
-    package_data={"xiilib.flask": ["cos/**", "cos/**/.**"]},
+    package_data={
+        "xiilib.flask": ["cos/**", "cos/**/.**"],
+        "xiilib.django": ["cos/**", "cos/**/.**"],
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
