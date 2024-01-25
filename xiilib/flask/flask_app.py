@@ -77,13 +77,12 @@ class FlaskApp:  # pylint: disable=too-few-public-methods
         env.update(self._charm_state.database_uris)
         return env
 
-    def _flask_layer(self) -> ops.pebble.LayerDict:
+    def _flask_layer(self, environment: typing.Dict[str, str]) -> ops.pebble.LayerDict:
         """Generate the pebble layer definition for flask application.
 
         Returns:
             The pebble layer definition for flask application.
         """
-        environment = self._flask_environment()
         return ops.pebble.LayerDict(
             services={
                 FLASK_SERVICE_NAME: {
