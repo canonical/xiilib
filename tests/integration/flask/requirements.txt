@@ -1,2 +1,2 @@
 ops >= 1.5.0
-https://github.com/weiiwang01/pytest-operator/archive/feat-metadata-in-charmcraft-yaml.tar.gz
+pytest-operator >= 0.32.0
