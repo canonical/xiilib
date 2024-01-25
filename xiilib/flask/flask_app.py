@@ -112,7 +112,7 @@ class FlaskApp:  # pylint: disable=too-few-public-methods
         if not self._charm_state.is_secret_storage_ready:
             logger.info("secret storage is not initialized")
             return
-        container.add_layer("flask", self._flask_layer(), combine=True)
+        container.add_layer("flask", self._flask_layer(env), combine=True)
         is_webserver_running = container.get_service(FLASK_SERVICE_NAME).is_running()
         self._webserver.update_config(
             environment=env,
