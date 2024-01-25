@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """Provide the Databases class to handle database relations and state."""
@@ -9,20 +9,18 @@ import typing
 
 import ops
 import yaml
-from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires, DatabaseRequiresEvent
-
-from xiilib.exceptions import CharmConfigInvalidError
+from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
 
 SUPPORTED_DB_INTERFACES = {"mysql_client": "mysql", "postgresql_client": "postgresql"}
 
 logger = logging.getLogger(__name__)
 
 
-class Application(typing.Protocol):
-    """Interface for the charm managed application"""
+class Application(typing.Protocol):  # pylint: disable=too-few-public-methods
+    """Interface for the charm managed application."""
 
-    def restart(self):
-        """Restart the application"""
+    def restart(self) -> None:
+        """Restart the application."""
 
 
 def make_database_requirers(
@@ -37,7 +35,10 @@ def make_database_requirers(
     Returns: A dictionary which is the database uri environment variable name and the
         value is the corresponding database requirer object.
     """
-    metadata = yaml.safe_load(pathlib.Path("metadata.yaml").read_text(encoding="utf-8"))
+    metadata_file = pathlib.Path("metadata.yaml")
+    if not metadata_file.exists():
+        metadata_file = pathlib.Path("charmcraft.yaml")
+    metadata = yaml.safe_load(metadata_file.read_text(encoding="utf-8"))
     db_interfaces = (
         SUPPORTED_DB_INTERFACES[require["interface"]]
         for require in metadata["requires"].values()
@@ -69,7 +70,11 @@ def get_uris(database_requirers: typing.Dict[str, DatabaseRequires]) -> typing.D
     db_uris: typing.Dict[str, str] = {}
 
     for interface_name, db_requires in database_requirers.items():
-        relation_data = list(db_requires.fetch_relation_data().values())
+        relation_data = list(
+            db_requires.fetch_relation_data(
+                fields=["endpoints", "username", "password", "database"]
+            ).values()
+        )
 
         if not relation_data:
             continue

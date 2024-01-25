@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2023 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """Flask Charm service."""
@@ -12,6 +12,7 @@ import typing
 import ops
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequiresEvent
 from charms.traefik_k8s.v2.ingress import IngressPerAppRequirer
+
 from xiilib.database_migration import DatabaseMigration, DatabaseMigrationStatus
 from xiilib.databases import Databases, get_uris, make_database_requirers
 from xiilib.exceptions import CharmConfigInvalidError
@@ -31,7 +32,7 @@ from xiilib.webserver import GunicornWebserver
 logger = logging.getLogger(__name__)
 
 
-class Charm(ops.CharmBase):
+class Charm(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
     """Flask Charm service."""
 
     def __init__(self, *args: typing.Any) -> None:
@@ -53,7 +54,6 @@ class Charm(ops.CharmBase):
             )
         except CharmConfigInvalidError as exc:
             self._update_app_and_unit_status(ops.BlockedStatus(exc.msg))
-            self.okay = False
             return
 
         self._database_migration = DatabaseMigration(
@@ -90,20 +90,27 @@ class Charm(ops.CharmBase):
             container_name=FLASK_CONTAINER_NAME,
             cos_dir=str((pathlib.Path(__file__).parent / "cos").absolute()),
         )
-        self.supported_events = {
-            "rotate_secret_key_action": self.on.rotate_secret_key_action,
-            "secret_storage_relation_changed": self.on.secret_storage_relation_changed,
-            "flask_app_pebble_ready": self.on.flask_app_pebble_ready,
-            "update_status": self.on.update_status,
-            "statsd_prometheus_exporter_pebble_ready": self.on.statsd_prometheus_exporter_pebble_ready,
-        }
+        self.framework.observe(self.on.config_changed, self._on_config_changed)
+        self.framework.observe(self.on.rotate_secret_key_action, self._on_rotate_secret_key_action)
+        self.framework.observe(
+            self.on.secret_storage_relation_changed,
+            self._on_secret_storage_relation_changed,
+        )
+        self.framework.observe(self.on.flask_app_pebble_ready, self._on_flask_app_pebble_ready)
+        self.framework.observe(self.on.update_status, self._on_update_status)
+        self.framework.observe(
+            self.on.statsd_prometheus_exporter_pebble_ready,
+            self._on_statsd_prometheus_exporter_pebble_ready,
+        )
         for database, database_requirer in database_requirers.items():
-            self.supported_events[
-                f"{database}_database_database_created"
-            ] = database_requirer.on.database_created
-            self.supported_events[f"{database}_database_relation_broken"] = self.on[
-                database_requirer.relation_name
-            ].relation_broken
+            self.framework.observe(
+                database_requirer.on.database_created,
+                getattr(self, f"_on_{database}_database_database_created"),
+            )
+            self.framework.observe(
+                self.on[database_requirer.relation_name].relation_broken,
+                getattr(self, f"_on_{database}_database_relation_broken"),
+            )
 
     def _on_config_changed(self, _event: ops.EventBase) -> None:
         """Configure the flask pebble service layer.
@@ -164,9 +171,7 @@ class Charm(ops.CharmBase):
         """Handle the pebble-ready event."""
         self._restart_flask()
 
-    def _on_statsd_prometheus_exporter_pebble_ready(
-        self, _event: ops.PebbleReadyEvent
-    ) -> None:
+    def _on_statsd_prometheus_exporter_pebble_ready(self, _event: ops.PebbleReadyEvent) -> None:
         """Handle the statsd-prometheus-exporter-pebble-ready event."""
         container = self.unit.get_container("statsd-prometheus-exporter")
         container.push(
@@ -208,14 +213,18 @@ class Charm(ops.CharmBase):
         container.add_layer("statsd-prometheus-exporter", statsd_layer, combine=True)
         container.replan()
 
-    def _on_mysql_database_database_created(self, _event: DatabaseRequiresEvent):
+    def _on_mysql_database_database_created(self, _event: DatabaseRequiresEvent) -> None:
+        """Handle the mysql's database-created event."""
         self._restart_flask()
 
-    def _on_mysql_database_relation_broken(self, _event: ops.RelationBrokenEvent):
+    def _on_mysql_database_relation_broken(self, _event: ops.RelationBrokenEvent) -> None:
+        """Handle the mysql's relation-broken event."""
         self._restart_flask()
 
-    def _on_postgresql_database_database_created(self, _event: DatabaseRequiresEvent):
+    def _on_postgresql_database_database_created(self, _event: DatabaseRequiresEvent) -> None:
+        """Handle the postgresql's database-created event."""
         self._restart_flask()
 
-    def _on_postgresql_database_relation_broken(self, _event: ops.RelationBrokenEvent):
+    def _on_postgresql_database_relation_broken(self, _event: ops.RelationBrokenEvent) -> None:
+        """Handle the postgresql's relation-broken event."""
         self._restart_flask()

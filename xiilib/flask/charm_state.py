@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """This module defines the CharmState class which represents the state of the Flask charm."""
@@ -20,13 +20,13 @@ from pydantic import (  # pylint: disable=no-name-in-module
     validator,
 )
 
-from xiilib.flask.constants import FLASK_APP_DIR
 from xiilib.exceptions import CharmConfigInvalidError
+from xiilib.flask.constants import FLASK_APP_DIR
 from xiilib.flask.secret_storage import FlaskSecretStorage
 from xiilib.webserver import WebserverConfig
 
 if typing.TYPE_CHECKING:
-    from charm import Charm
+    from xiilib.flask import Charm
 
 KNOWN_CHARM_CONFIG = (
     "database_migration_script",

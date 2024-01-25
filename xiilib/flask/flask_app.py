@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """Provide the FlaskApp class to represent the Flask application."""
@@ -8,10 +8,10 @@ import shlex
 
 import ops
 
+from xiilib.database_migration import DatabaseMigration
+from xiilib.exceptions import CharmConfigInvalidError
 from xiilib.flask.charm_state import KNOWN_CHARM_CONFIG, CharmState
 from xiilib.flask.constants import FLASK_APP_DIR, FLASK_ENV_CONFIG_PREFIX, FLASK_SERVICE_NAME
-from xiilib.exceptions import CharmConfigInvalidError
-from xiilib.database_migration import DatabaseMigration
 from xiilib.webserver import GunicornWebserver
 
 logger = logging.getLogger(__name__)

@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """Provide the GunicornWebserver class to represent the gunicorn server."""
@@ -102,7 +102,7 @@ class GunicornWebserver:
 
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         charm_state: GunicornCharmState,
         container: ops.Container,
@@ -215,9 +215,7 @@ statsd_host = {repr(self._charm_state.statsd_host)}
         self._container.push(webserver_config_path, self._config)
         if current_webserver_config == self._config:
             return
-        exec_process = self._container.exec(
-            self._check_config_command, environment=environment
-        )
+        exec_process = self._container.exec(self._check_config_command, environment=environment)
         try:
             exec_process.wait_output()
         except ExecError as exc:
