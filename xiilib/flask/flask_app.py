@@ -102,7 +102,9 @@ class FlaskApp:  # pylint: disable=too-few-public-methods
         Raises:
              CharmConfigInvalidError: if the configuration is not valid.
         """
-        env = {**self._flask_environment(), **additional_env}
+        env = self._flask_environment()
+        if additional_env is not None:
+            env.update(additional_env)
         container = self._charm.unit.get_container("flask-app")
         if not container.can_connect():
             logger.info("pebble client in the Flask container is not ready")
