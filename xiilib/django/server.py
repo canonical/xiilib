@@ -82,7 +82,9 @@ class GunicornServer:
         config_updated = self._refresh_config_file()
         self._container.make_dir("/var/log/gunicorn/", make_parents=True, user="_daemon_")
 
-        check_command = shlex.split(self._container.get_plan().services[self._service_name].command)
+        check_command = shlex.split(
+            self._container.get_plan().services[self._service_name].command
+        )
         check_command.append("--check-config")
         exec_process = self._container.exec(check_command, environment=env)
         try:
@@ -96,9 +98,7 @@ class GunicornServer:
             raise WebserverError("gunicorn configuration check failed")
 
         layer_files = self._container.list_files("/var/lib/pebble/default/layers/")
-        original_layer = yaml.safe_load(
-            self._container.pull(layer_files[0].path).read()
-        )
+        original_layer = yaml.safe_load(self._container.pull(layer_files[0].path).read())
         original_services = original_layer["services"]
         for service in original_services.values():
             service["override"] = "replace"
@@ -106,8 +106,10 @@ class GunicornServer:
         original_services[self._service_name]["environment"] = {**original_env, **env}
         self._container.add_layer("test-django", original_layer, combine=True)
 
-        is_running = self._container.get_service(self._service_name).is_running()
-        if config_updated and is_running:
+        if config_updated and self.is_running():
             self._container.send_signal(signal.SIGHUP, self._service_name)
 
         self._container.replan()
+
+    def is_running(self):
+        return self._container.get_service(self._service_name).is_running()

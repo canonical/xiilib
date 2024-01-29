@@ -67,7 +67,13 @@ class Charm(ops.CharmBase):
             self._databases.on.all_databases_ready, self._on_all_databases_ready
         )
 
-    def _get_environment(self) -> dict[str, str]:
+    def is_running(self) -> bool:
+        container = self.unit.get_container(self._CONTAINER_NAME)
+        if not container.can_connect():
+            return False
+        return self._server.is_running()
+
+    def gen_env(self) -> dict[str, str]:
         known_configs = {
             "django_allowed_hosts",
             "django_debug",
@@ -116,7 +122,7 @@ class Charm(ops.CharmBase):
             self.unit.status = ops.MaintenanceStatus("Executing database migration")
             migration_ok = self._database_migration.run(
                 ["python3", "manage.py", "migrate"],
-                environment=self._get_environment(),
+                environment=self.gen_env(),
                 working_dir=str(self._BASE_DIR / "app"),
             )
             self.unit.status = status
@@ -125,9 +131,8 @@ class Charm(ops.CharmBase):
                     "Database migration failed, will retry in the next update-status"
                 )
                 return
-
         try:
-            self._server.apply(self._get_environment())
+            self._server.apply(self.gen_env())
             self.unit.status = ActiveStatus()
             if self.unit.is_leader():
                 self.app.status = ActiveStatus()
