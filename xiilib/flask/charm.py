@@ -228,3 +228,11 @@ class Charm(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
     def _on_postgresql_database_relation_broken(self, _event: ops.RelationBrokenEvent) -> None:
         """Handle the postgresql's relation-broken event."""
         self._restart_flask()
+
+    def _on_mongodb_database_database_created(self, _event: DatabaseRequiresEvent) -> None:
+        """Handle the mongodb's database-created event."""
+        self._restart_flask()
+
+    def _on_mongodb_database_relation_broken(self, _event: ops.RelationBrokenEvent) -> None:
+        """Handle the mysql's relation-broken event."""
+        self._restart_flask()
