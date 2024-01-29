@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 
 import psycopg
 import pymongo
+import pymongo.database
 import pymongo.errors
 import pymysql
 import pymysql.cursors
@@ -46,7 +47,7 @@ def get_postgresql_database():
     return g.postgresql_db
 
 
-def get_mongodb_database() -> pymongo.collection.Database | None:
+def get_mongodb_database() -> pymongo.database.Database | None:
     """Get the mongodb db connection."""
     if "mongodb_db" not in g:
         if "MONGODB_DB_CONNECT_STRING" in os.environ:
