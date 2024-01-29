@@ -128,6 +128,9 @@ requires:
   mongodb:
     interface: mongodb_client
     limit: 1
+  redis:
+    interface: redis
+    limit: 1
   logging:
     interface: loki_push_api
 
