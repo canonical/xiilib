@@ -11,7 +11,11 @@ import ops
 import yaml
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
 
-SUPPORTED_DB_INTERFACES = {"mysql_client": "mysql", "postgresql_client": "postgresql"}
+SUPPORTED_DB_INTERFACES = {
+    "mysql_client": "mysql",
+    "postgresql_client": "postgresql",
+    "mongodb_client": "mongodb",
+}
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +72,8 @@ def get_uris(database_requirers: typing.Dict[str, DatabaseRequires]) -> typing.D
         DatabaseURI containing details about the data provider integration
     """
     db_uris: typing.Dict[str, str] = {}
+
+
 
     for interface_name, db_requires in database_requirers.items():
         relation_data = list(

@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
     [
         ("mysql/status", "mysql-k8s", "8.0/stable", "75", True),
         ("postgresql/status", "postgresql-k8s", "14/stable", None, True),
+        ("mongodb/status", "mongodb-k8s", "6/beta", None, True),
     ],
 )
 async def test_with_database(

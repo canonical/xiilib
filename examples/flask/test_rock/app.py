@@ -3,9 +3,12 @@
 
 import os
 import time
+import urllib.parse
 from urllib.parse import urlparse
 
 import psycopg
+import pymongo
+import pymongo.errors
 import pymysql
 import pymysql.cursors
 from flask import Flask, g, jsonify, request
@@ -43,6 +46,19 @@ def get_postgresql_database():
     return g.postgresql_db
 
 
+def get_mongodb_database() -> pymongo.collection.Database | None:
+    """Get the mongodb db connection."""
+    if "mongodb_db" not in g:
+        if "MONGODB_DB_CONNECT_STRING" in os.environ:
+            uri = os.environ["MONGODB_DB_CONNECT_STRING"]
+            client = pymongo.MongoClient(uri)
+            db = urllib.parse.urlparse(uri).path.removeprefix("/")
+            g.mongodb_db = client.get_database(db)
+        else:
+            return None
+    return g.mongodb_db
+
+
 @app.teardown_appcontext
 def teardown_database(_):
     """Tear down databases connections."""
@@ -52,6 +68,9 @@ def teardown_database(_):
     postgresql_db = g.pop("postgresql_db", None)
     if postgresql_db is not None:
         postgresql_db.close()
+    mongodb_db = g.pop("mongodb_db", None)
+    if mongodb_db is not None:
+        mongodb_db.client.close()
 
 
 @app.route("/")
@@ -92,6 +111,18 @@ def postgresql_status():
             cursor.execute(sql)
             cursor.fetchone()
             return "SUCCESS"
+    return "FAIL"
+
+
+@app.route("/mongodb/status")
+def mongodb_status():
+    """Mongodb status endpoint."""
+    if database := get_mongodb_database():
+        try:
+            database.list_collection_names()
+            return "SUCCESS"
+        except pymongo.errors.PyMongoError:
+            pass
     return "FAIL"
 
 

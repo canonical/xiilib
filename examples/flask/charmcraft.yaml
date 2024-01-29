@@ -125,6 +125,9 @@ requires:
     interface: postgresql_client
     limit: 1
     optional: true
+  mongodb:
+    interface: mongodb_client
+    limit: 1
   logging:
     interface: loki_push_api
 
