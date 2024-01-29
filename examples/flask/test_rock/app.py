@@ -12,6 +12,7 @@ import pymongo.database
 import pymongo.errors
 import pymysql
 import pymysql.cursors
+import redis
 from flask import Flask, g, jsonify, request
 
 app = Flask(__name__)
@@ -58,6 +59,16 @@ def get_mongodb_database() -> pymongo.database.Database | None:
         else:
             return None
     return g.mongodb_db
+
+
+def get_redis_database() -> redis.Redis | None:
+    if "redis_db" not in g:
+        if "REDIS_DB_CONNECT_STRING" in os.environ:
+            uri = os.environ["REDIS_DB_CONNECT_STRING"]
+            g.redis_db = redis.Redis.from_url(uri)
+        else:
+            return None
+    return g.redis_db
 
 
 @app.teardown_appcontext
@@ -121,6 +132,18 @@ def mongodb_status():
     if database := get_mongodb_database():
         try:
             database.list_collection_names()
+            return "SUCCESS"
+        except pymongo.errors.PyMongoError:
+            pass
+    return "FAIL"
+
+
+@app.route("/redis/status")
+def redis_status():
+    """Mongodb status endpoint."""
+    if database := get_redis_database():
+        try:
+            database.set("foo", "bar")
             return "SUCCESS"
         except pymongo.errors.PyMongoError:
             pass

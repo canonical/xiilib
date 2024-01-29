@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
         ("mysql/status", "mysql-k8s", "8.0/stable", "75", True),
         ("postgresql/status", "postgresql-k8s", "14/stable", None, True),
         ("mongodb/status", "mongodb-k8s", "6/beta", None, True),
+        ("redis/status", "redis-k8s", "latest/edge", None, True),
     ],
 )
 async def test_with_database(
@@ -48,8 +49,8 @@ async def test_with_database(
     if trust:
         deploy_cmd.extend(["--trust"])
     await ops_test.juju(*deploy_cmd)
-    # mypy doesn't see that ActiveStatus has a name
-    await model.wait_for_idle(status=ops.ActiveStatus.name)  # type: ignore
+
+    await model.wait_for_idle()
 
     await model.add_relation(flask_app.name, db_name)
 

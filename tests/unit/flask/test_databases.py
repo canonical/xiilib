@@ -46,6 +46,10 @@ DATABASE_URL_TEST_PARAMS = [
         },
     ),
     (
+        ({"interface": "redis", "data": {"endpoints": "test:6379"}},),
+        {"REDIS_DB_CONNECT_STRING": "redis://test:6379"},
+    ),
+    (
         (
             {
                 "interface": "mysql",
