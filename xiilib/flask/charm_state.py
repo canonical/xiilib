@@ -227,9 +227,9 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
             webserver_threads=int(threads) if threads is not None else None,
             webserver_keepalive=int(keepalive) if keepalive is not None else None,
             webserver_timeout=int(timeout) if timeout is not None else None,
-            flask_secret_key=secret_storage.get_flask_secret_key()
-            if secret_storage.is_initialized
-            else None,
+            flask_secret_key=(
+                secret_storage.get_flask_secret_key() if secret_storage.is_initialized else None
+            ),
             is_secret_storage_ready=secret_storage.is_initialized,
         )
 
@@ -243,12 +243,16 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         return WebserverConfig(
             workers=self._webserver_workers,
             threads=self._webserver_threads,
-            keepalive=datetime.timedelta(seconds=int(self._webserver_keepalive))
-            if self._webserver_keepalive is not None
-            else None,
-            timeout=datetime.timedelta(seconds=int(self._webserver_timeout))
-            if self._webserver_timeout is not None
-            else None,
+            keepalive=(
+                datetime.timedelta(seconds=int(self._webserver_keepalive))
+                if self._webserver_keepalive is not None
+                else None
+            ),
+            timeout=(
+                datetime.timedelta(seconds=int(self._webserver_timeout))
+                if self._webserver_timeout is not None
+                else None
+            ),
         )
 
     @property

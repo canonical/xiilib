@@ -113,13 +113,15 @@ def make_database_requirers(
     # one database relation requirer is required for each of the database relations
     # create a dictionary to hold the requirers
     databases = {
-        name: DatabaseRequires(
-            charm,
-            relation_name=name,
-            database_name=database_name,
+        name: (
+            DatabaseRequires(
+                charm,
+                relation_name=name,
+                database_name=database_name,
+            )
+            if name != "redis"
+            else _RedisDatabaseRequiresShim(charm, relation_name=name)
         )
-        if name != "redis"
-        else _RedisDatabaseRequiresShim(charm, relation_name=name)
         for name in db_interfaces
     }
     return databases
