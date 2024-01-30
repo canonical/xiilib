@@ -44,7 +44,7 @@ class Charm(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
         super().__init__(*args)
         self.okay = True
         self._secret_storage = FlaskSecretStorage(charm=self)
-        database_requirers = make_database_requirers(self, "flask-app")
+        database_requirers = make_database_requirers(self, self.app.name)
 
         try:
             self._charm_state = CharmState.from_charm(
