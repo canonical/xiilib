@@ -53,7 +53,7 @@ class _RedisDatabaseRequiresShim:  # pylint: disable=too-few-public-methods
             relation_name: The redis relation name.
         """
         self._charm = charm
-        self._relation_name = relation_name
+        self.relation_name = relation_name
         # redis charm doesn't provide database id via the relation
         self.database = ""
         self.on = self._RedisDatabaseRequiresEventShim(
@@ -71,7 +71,7 @@ class _RedisDatabaseRequiresShim:  # pylint: disable=too-few-public-methods
         Returns: required relation data.
         """
         data = {}
-        for relation in self._charm.model.relations[self._relation_name]:
+        for relation in self._charm.model.relations[self.relation_name]:
             endpoints = []
             if relation.app is None:
                 continue
