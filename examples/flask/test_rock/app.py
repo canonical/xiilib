@@ -130,11 +130,8 @@ def postgresql_status():
 def mongodb_status():
     """Mongodb status endpoint."""
     if (database := get_mongodb_database()) is not None:
-        try:
-            database.list_collection_names()
-            return "SUCCESS"
-        except pymongo.errors.PyMongoError:
-            pass
+        database.list_collection_names()
+        return "SUCCESS"
     return "FAIL"
 
 
