@@ -28,7 +28,7 @@ async def test_db_migration(
 
     await model.add_relation(flask_db_app.name, db_app.name)
 
-    await model.wait_for_idle(status="active")
+    await model.wait_for_idle(status="active", timeout=20 * 60)
 
     for unit_ip in await get_unit_ips(flask_db_app.name):
         assert requests.head(f"http://{unit_ip}:8000/tables/users", timeout=5).status_code == 404

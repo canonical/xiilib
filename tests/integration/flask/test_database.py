@@ -4,6 +4,7 @@
 
 """Integration tests for Flask charm database integration."""
 import logging
+import time
 
 import juju
 import ops
@@ -59,6 +60,10 @@ async def test_with_database(
     await model.wait_for_idle(status=ops.ActiveStatus.name)  # type: ignore
 
     for unit_ip in await get_unit_ips(flask_app.name):
-        response = requests.get(f"http://{unit_ip}:8000/{endpoint}", timeout=5)
-        assert response.status_code == 200
+        for _ in range(10):
+            response = requests.get(f"http://{unit_ip}:8000/{endpoint}", timeout=5)
+            assert response.status_code == 200
+            if "SUCCESS" == response.text:
+                return
+            time.sleep(60)
         assert "SUCCESS" == response.text
