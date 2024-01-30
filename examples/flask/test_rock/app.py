@@ -129,7 +129,7 @@ def postgresql_status():
 @app.route("/mongodb/status")
 def mongodb_status():
     """Mongodb status endpoint."""
-    if database := get_mongodb_database():
+    if (database := get_mongodb_database()) is not None:
         try:
             database.list_collection_names()
             return "SUCCESS"

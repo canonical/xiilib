@@ -50,7 +50,8 @@ async def test_with_database(
         deploy_cmd.extend(["--trust"])
     await ops_test.juju(*deploy_cmd)
 
-    await model.wait_for_idle()
+    # mypy doesn't see that ActiveStatus has a name
+    await model.wait_for_idle(status=ops.ActiveStatus.name)  # type: ignore
 
     await model.add_relation(flask_app.name, db_name)
 
