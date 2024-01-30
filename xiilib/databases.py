@@ -38,12 +38,14 @@ class _RedisDatabaseRequiresShim:  # pylint: disable=too-few-public-methods
             """Initialize the _RedisDatabaseRequiresEventShim object.
 
             As we are checking the database relation later in the get_uris function.
-            We can use the charm's relation_changed event as database_created event.
+            We can use the charm's relation_changed event as database_created and
+            endpoints_changed event.
 
             Args:
                 relation_changed: charm's redis relation changed event.
             """
             self.database_created = relation_changed
+            self.endpoints_changed = relation_changed
 
     def __init__(self, charm: ops.CharmBase, relation_name: str):
         """Initialize the redis database requires.

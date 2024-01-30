@@ -108,6 +108,10 @@ class Charm(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
                 getattr(self, f"_on_{database}_database_database_created"),
             )
             self.framework.observe(
+                database_requirer.on.endpoints_changed,
+                getattr(self, f"_on_{database}_database_endpoints_changed"),
+            )
+            self.framework.observe(
                 self.on[database_requirer.relation_name].relation_broken,
                 getattr(self, f"_on_{database}_database_relation_broken"),
             )
@@ -217,12 +221,20 @@ class Charm(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
         """Handle the mysql's database-created event."""
         self._restart_flask()
 
+    def _on_mysql_database_endpoints_changed(self, _event: DatabaseRequiresEvent) -> None:
+        """Handle the mysql's endpoints-changed event."""
+        self._restart_flask()
+
     def _on_mysql_database_relation_broken(self, _event: ops.RelationBrokenEvent) -> None:
         """Handle the mysql's relation-broken event."""
         self._restart_flask()
 
     def _on_postgresql_database_database_created(self, _event: DatabaseRequiresEvent) -> None:
         """Handle the postgresql's database-created event."""
+        self._restart_flask()
+
+    def _on_postgresql_database_endpoints_changed(self, _event: DatabaseRequiresEvent) -> None:
+        """Handle the mysql's endpoints-changed event."""
         self._restart_flask()
 
     def _on_postgresql_database_relation_broken(self, _event: ops.RelationBrokenEvent) -> None:
@@ -233,12 +245,20 @@ class Charm(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
         """Handle the mongodb's database-created event."""
         self._restart_flask()
 
+    def _on_mongodb_database_endpoints_changed(self, _event: DatabaseRequiresEvent) -> None:
+        """Handle the mysql's endpoints-changed event."""
+        self._restart_flask()
+
     def _on_mongodb_database_relation_broken(self, _event: ops.RelationBrokenEvent) -> None:
         """Handle the mysql's relation-broken event."""
         self._restart_flask()
 
     def _on_redis_database_database_created(self, _event: DatabaseRequiresEvent) -> None:
         """Handle the mongodb's database-created event."""
+        self._restart_flask()
+
+    def _on_redis_database_endpoints_changed(self, _event: DatabaseRequiresEvent) -> None:
+        """Handle the mysql's endpoints-changed event."""
         self._restart_flask()
 
     def _on_redis_database_relation_broken(self, _event: ops.RelationBrokenEvent) -> None:
