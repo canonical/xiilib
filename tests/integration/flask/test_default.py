@@ -22,7 +22,6 @@ async def test_default_image(
     """
     resources = {
         "flask-app-image": flask_app_image,
-        "statsd-prometheus-exporter-image": "prom/statsd-exporter",
     }
     app_name = "flask-sentinel"
     await model.deploy(charm_file, resources=resources, application_name=app_name, series="jammy")

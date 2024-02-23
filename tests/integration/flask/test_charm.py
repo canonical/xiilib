@@ -39,9 +39,9 @@ async def test_flask_is_up(
 @pytest.mark.parametrize(
     "update_config, timeout",
     [
-        pytest.param({"webserver_timeout": 7}, 7, id="timeout=7"),
-        pytest.param({"webserver_timeout": 5}, 5, id="timeout=5"),
-        pytest.param({"webserver_timeout": 3}, 3, id="timeout=3"),
+        pytest.param({"webserver-timeout": 7}, 7, id="timeout=7"),
+        pytest.param({"webserver-timeout": 5}, 5, id="timeout=5"),
+        pytest.param({"webserver-timeout": 3}, 3, id="timeout=3"),
     ],
     indirect=["update_config"],
 )
@@ -87,14 +87,14 @@ async def test_default_secret_key(
 @pytest.mark.parametrize(
     "update_config, excepted_config",
     [
-        pytest.param({"flask_env": "testing"}, {"ENV": "testing"}, id="env"),
+        pytest.param({"flask-env": "testing"}, {"ENV": "testing"}, id="env"),
         pytest.param(
-            {"flask_permanent_session_lifetime": 100},
+            {"flask-permanent-session-lifetime": 100},
             {"PERMANENT_SESSION_LIFETIME": 100},
             id="permanent_session_lifetime",
         ),
-        pytest.param({"flask_debug": True}, {"DEBUG": True}, id="debug"),
-        pytest.param({"flask_secret_key": "foobar"}, {"SECRET_KEY": "foobar"}, id="secret_key"),
+        pytest.param({"flask-debug": True}, {"DEBUG": True}, id="debug"),
+        pytest.param({"flask-secret-key": "foobar"}, {"SECRET_KEY": "foobar"}, id="secret_key"),
     ],
     indirect=["update_config"],
 )
@@ -121,13 +121,13 @@ async def test_flask_config(
     "update_config, invalid_configs",
     [
         pytest.param(
-            {"flask_permanent_session_lifetime": -1},
-            ("permanent_session_lifetime",),
+            {"flask-permanent-session-lifetime": -1},
+            ("permanent-session-lifetime",),
             id="permanent_session_lifetime",
         ),
         pytest.param(
-            {"flask_preferred_url_scheme": "TLS"},
-            ("preferred_url_scheme",),
+            {"flask-preferred-url-scheme": "TLS"},
+            ("preferred-url-scheme",),
             id="preferred_url_scheme",
         ),
     ],
@@ -154,11 +154,11 @@ async def test_invalid_flask_config(flask_app: Application, invalid_configs: tup
 @pytest.mark.parametrize(
     "update_config, excepted_config",
     [
-        pytest.param({"foo_str": "testing"}, {"FOO_STR": "testing"}, id="str"),
-        pytest.param({"foo_int": 128}, {"FOO_INT": 128}, id="int"),
-        pytest.param({"foo_bool": True}, {"FOO_BOOL": True}, id="bool"),
-        pytest.param({"foo_dict": json.dumps({"a": 1})}, {"FOO_DICT": {"a": 1}}, id="dict"),
-        pytest.param({"application_root": "/foo"}, {"APPLICATION_ROOT": "/"}, id="builtin"),
+        pytest.param({"foo-str": "testing"}, {"FOO_STR": "testing"}, id="str"),
+        pytest.param({"foo-int": 128}, {"FOO_INT": 128}, id="int"),
+        pytest.param({"foo-bool": True}, {"FOO_BOOL": True}, id="bool"),
+        pytest.param({"foo-dict": json.dumps({"a": 1})}, {"FOO_DICT": {"a": 1}}, id="dict"),
+        pytest.param({"application-root": "/foo"}, {"APPLICATION_ROOT": "/"}, id="builtin"),
     ],
     indirect=["update_config"],
 )

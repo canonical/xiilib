@@ -13,23 +13,19 @@ import ops
 import pytest
 from ops.testing import Harness
 
+from xiilib._gunicorn.webserver import GunicornWebserver, WebserverConfig
+from xiilib._gunicorn.wsgi_app import WsgiApp
 from xiilib.flask.charm_state import CharmState
-from xiilib.flask.constants import (
-    FLASK_APP_DIR,
-    FLASK_BASE_DIR,
-    FLASK_CONTAINER_NAME,
-    FLASK_SERVICE_NAME,
-)
-from xiilib.flask.flask_app import FlaskApp
-from xiilib.webserver import GunicornWebserver
+
+from .constants import DEFAULT_LAYER
 
 GUNICORN_CONFIG_TEST_PARAMS = [
     pytest.param(
-        {"webserver_workers": 10},
+        {"workers": 10},
         textwrap.dedent(
             f"""\
                 bind = ['0.0.0.0:8000']
-                chdir = '{FLASK_BASE_DIR}/app'
+                chdir = '/flask/app'
                 accesslog = '/var/log/flask/access.log'
                 errorlog = '/var/log/flask/error.log'
                 statsd_host = 'localhost:9125'
@@ -38,11 +34,11 @@ GUNICORN_CONFIG_TEST_PARAMS = [
         id="workers=10",
     ),
     pytest.param(
-        {"webserver_threads": 2, "webserver_timeout": 3, "webserver_keepalive": 4},
+        {"threads": 2, "timeout": 3, "keepalive": 4},
         textwrap.dedent(
             f"""\
                 bind = ['0.0.0.0:8000']
-                chdir = '{FLASK_BASE_DIR}/app'
+                chdir = '/flask/app'
                 accesslog = '/var/log/flask/access.log'
                 errorlog = '/var/log/flask/error.log'
                 statsd_host = 'localhost:9125'
@@ -65,30 +61,34 @@ def test_gunicorn_config(
     act: invoke the update_config method of the webserver object.
     assert: gunicorn configuration file inside the flask app container should change accordingly.
     """
-    harness.begin_with_initial_hooks()
-    container: ops.Container = harness.model.unit.get_container(FLASK_CONTAINER_NAME)
-    harness.set_can_connect(FLASK_CONTAINER_NAME, True)
+    harness.begin()
+    container: ops.Container = harness.model.unit.get_container("flask-app")
+    harness.set_can_connect("flask-app", True)
+    container.add_layer("default", DEFAULT_LAYER)
+
     charm_state = CharmState(
-        flask_secret_key="",
+        framework="flask",
+        secret_key="",
         is_secret_storage_ready=True,
-        **charm_state_params,
+        webserver_config=WebserverConfig(**charm_state_params),
     )
     webserver = GunicornWebserver(
         charm_state=charm_state,
         container=container,
-        service_name=FLASK_SERVICE_NAME,
-        app_dir=FLASK_APP_DIR,
-        base_dir=FLASK_BASE_DIR,
     )
-    flask_app = FlaskApp(
+    flask_app = WsgiApp(
         charm=harness.charm,
         charm_state=charm_state,
         webserver=webserver,
         database_migration=database_migration_mock,
     )
     flask_app.restart()
-    webserver.update_config(is_webserver_running=False, environment=flask_app._flask_environment())
-    assert container.pull(f"{FLASK_BASE_DIR}/gunicorn.conf.py").read() == config_file
+    webserver.update_config(
+        is_webserver_running=False,
+        environment=flask_app._wsgi_environment(),
+        command=DEFAULT_LAYER["services"]["flask"]["command"],
+    )
+    assert container.pull(f"/flask/gunicorn.conf.py").read() == config_file
 
 
 @pytest.mark.parametrize("is_running", [True, False])
@@ -99,19 +99,23 @@ def test_webserver_reload(monkeypatch, harness: Harness, is_running, database_mi
     act: run the update_config method of the webserver object with different server running status.
     assert: webserver object should send signal to the Gunicorn server based on the running status.
     """
-    harness.begin_with_initial_hooks()
-    container: ops.Container = harness.model.unit.get_container(FLASK_CONTAINER_NAME)
-    harness.set_can_connect(FLASK_CONTAINER_NAME, True)
-    container.push(f"{FLASK_BASE_DIR}/gunicorn.conf.py", "")
-    charm_state = CharmState(flask_secret_key="", is_secret_storage_ready=True)
+    harness.begin()
+    container: ops.Container = harness.model.unit.get_container("flask-app")
+    harness.set_can_connect(container, True)
+    container.add_layer("default", DEFAULT_LAYER)
+
+    container.push(f"/flask/gunicorn.conf.py", "")
+    charm_state = CharmState(
+        framework="flask",
+        webserver_config=WebserverConfig(),
+        secret_key="",
+        is_secret_storage_ready=True,
+    )
     webserver = GunicornWebserver(
         charm_state=charm_state,
         container=container,
-        service_name=FLASK_SERVICE_NAME,
-        app_dir=FLASK_APP_DIR,
-        base_dir=FLASK_BASE_DIR,
     )
-    flask_app = FlaskApp(
+    flask_app = WsgiApp(
         charm=harness.charm,
         charm_state=charm_state,
         webserver=webserver,
@@ -121,6 +125,8 @@ def test_webserver_reload(monkeypatch, harness: Harness, is_running, database_mi
     send_signal_mock = unittest.mock.MagicMock()
     monkeypatch.setattr(container, "send_signal", send_signal_mock)
     webserver.update_config(
-        is_webserver_running=is_running, environment=flask_app._flask_environment()
+        is_webserver_running=is_running,
+        environment=flask_app._wsgi_environment(),
+        command=DEFAULT_LAYER["services"]["flask"]["command"],
     )
     assert send_signal_mock.call_count == (1 if is_running else 0)

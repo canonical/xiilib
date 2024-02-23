@@ -10,3 +10,4 @@ def pytest_addoption(parser):
     parser.addoption("--flask-app-image", action="store")
     parser.addoption("--test-flask-image", action="store")
     parser.addoption("--test-db-flask-image", action="store")
+    parser.addoption("--django-app-image", action="store")

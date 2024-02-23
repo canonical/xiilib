@@ -4,6 +4,7 @@
 """pytest fixtures for the integration test."""
 import os
 import pathlib
+import shlex
 import typing
 import unittest.mock
 
@@ -13,7 +14,8 @@ from ops.testing import Harness
 
 from examples.flask.src.charm import FlaskCharm
 from xiilib.database_migration import DatabaseMigrationStatus
-from xiilib.flask.constants import FLASK_CONTAINER_NAME
+
+from .constants import DEFAULT_LAYER
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent.parent.parent
 
@@ -26,11 +28,12 @@ def cwd():
 @pytest.fixture(name="harness")
 def harness_fixture() -> typing.Generator[Harness, None, None]:
     """Ops testing framework harness fixture."""
+    container = "flask-app"
     harness = Harness(FlaskCharm)
     harness.set_leader()
-    root = harness.get_filesystem_root(FLASK_CONTAINER_NAME)
+    root = harness.get_filesystem_root(container)
     (root / "flask/app").mkdir(parents=True)
-    harness.set_can_connect(FLASK_CONTAINER_NAME, True)
+    harness.set_can_connect(container, True)
 
     def check_config_handler(_):
         """Handle the gunicorn check config command."""
@@ -39,17 +42,13 @@ def harness_fixture() -> typing.Generator[Harness, None, None]:
             return ops.testing.ExecResult(0)
         return ops.testing.ExecResult(1)
 
+    check_config_command = [
+        *shlex.split(DEFAULT_LAYER["services"]["flask"]["command"]),
+        "--check-config",
+    ]
     harness.handle_exec(
-        FLASK_CONTAINER_NAME,
-        [
-            "python3",
-            "-m",
-            "gunicorn",
-            "-c",
-            "/flask/gunicorn.conf.py",
-            "app:app",
-            "--check-config",
-        ],
+        container,
+        check_config_command,
         handler=check_config_handler,
     )
 

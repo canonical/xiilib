@@ -5,25 +5,7 @@ summary: Default Flask application image.
 description: Default Flask application image.
 version: "0.1"
 base: bare
-build-base: ubuntu:22.04
 license: Apache-2.0
-platforms:
-  amd64:
 
-parts:
-  flask-dependencies:
-    plugin: python
-    source: .
-    stage-packages:
-      - python3-venv
-    python-packages:
-      - gunicorn
-    python-requirements:
-      - requirements.txt
-  flask-app:
-    plugin: dump
-    source: .
-    organize:
-      "*": flask/app/
-    prime:
-      - flask/app
+extensions:
+  - flask-framework
