@@ -9,5 +9,5 @@ jobs:
     secrets: inherit
     with:
       modules: '["test_charm", "test_proxy", "test_cos", "test_database", "test_db_migration", "test_default", "test_django"]'
-      rockcraft-repository: canonical/rockcraft
+      rockcraft-repository: weiiwang01/rockcraft
       rockcraft-ref: add-django-framework
