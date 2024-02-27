@@ -24,7 +24,6 @@ async def test_proxy(build_charm: str, model: Model, test_flask_image: str, get_
     # not using the build_charm_fixture since we need to set model configs before deploy the charm
     resources = {
         "flask-app-image": test_flask_image,
-        "statsd-prometheus-exporter-image": "prom/statsd-exporter",
     }
     await model.deploy(build_charm, resources=resources, application_name=app_name, series="jammy")
     await model.wait_for_idle(raise_on_blocked=True)
