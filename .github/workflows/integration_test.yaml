@@ -5,7 +5,9 @@ on:
 
 jobs:
   integration-tests:
-    uses: canonical/operator-workflows/.github/workflows/integration_test.yaml@main
+    uses: canonical/operator-workflows/.github/workflows/integration_test.yaml@feat-rockcraft-from-src
     secrets: inherit
     with:
       modules: '["test_charm", "test_proxy", "test_cos", "test_database", "test_db_migration", "test_default", "test_django"]'
+      rockcraft-repository: canonical/rockcraft
+      rockcraft-ref: add-django-framework
