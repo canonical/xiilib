@@ -72,7 +72,7 @@ def test_django_config(harness: Harness, config: dict, env: dict) -> None:
         "environment": env,
         "override": "replace",
         "startup": "enabled",
-        "command": "/bin/python3 -m gunicorn -c /django/gunicorn.conf.py django_k8s.wsgi:application",
+        "command": "/bin/python3 -m gunicorn -c /django/gunicorn.conf.py django_app.wsgi:application",
         "after": ["statsd-exporter"],
         "user": "_daemon_",
     }

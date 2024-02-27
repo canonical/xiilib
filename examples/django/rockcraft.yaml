@@ -1,7 +1,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-name: django-k8s
+name: django-app
 summary: Example Django application image.
 description: Example Django application image.
 version: "0.1"
