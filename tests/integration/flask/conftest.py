@@ -24,15 +24,6 @@ def cwd():
     return os.chdir(PROJECT_ROOT / "examples/flask")
 
 
-@pytest.fixture(scope="module", name="flask_app_image")
-def fixture_flask_app_image(pytestconfig: Config):
-    """Return the --flask-app-image test parameter."""
-    flask_app_image = pytestconfig.getoption("--flask-app-image")
-    if not flask_app_image:
-        raise ValueError("the following arguments are required: --flask-app-image")
-    return flask_app_image
-
-
 @pytest.fixture(scope="module", name="test_flask_image")
 def fixture_test_flask_image(pytestconfig: Config):
     """Return the --test-flask-image test parameter."""
