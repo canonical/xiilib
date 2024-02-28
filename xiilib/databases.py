@@ -14,8 +14,6 @@ from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
 SUPPORTED_DB_INTERFACES = {
     "mysql_client": "mysql",
     "postgresql_client": "postgresql",
-    "mongodb_client": "mongodb",
-    "redis": "redis",
 }
 
 logger = logging.getLogger(__name__)
@@ -26,68 +24,6 @@ class Application(typing.Protocol):  # pylint: disable=too-few-public-methods
 
     def restart(self) -> None:
         """Restart the application."""
-
-
-class _RedisDatabaseRequiresShim:  # pylint: disable=too-few-public-methods
-    """A shim to allow handling redis relation similar to other data platform databases."""
-
-    class _RedisDatabaseRequiresEventShim:  # pylint: disable=too-few-public-methods
-        """A shim to provide redis database_created event as in the DatabaseRequires."""
-
-        def __init__(self, relation_changed: typing.Callable):
-            """Initialize the _RedisDatabaseRequiresEventShim object.
-
-            As we are checking the database relation later in the get_uris function.
-            We can use the charm's relation_changed event as database_created and
-            endpoints_changed event.
-
-            Args:
-                relation_changed: charm's redis relation changed event.
-            """
-            self.database_created = relation_changed
-            self.endpoints_changed = relation_changed
-
-    def __init__(self, charm: ops.CharmBase, relation_name: str):
-        """Initialize the redis database requires.
-
-        Args:
-            charm: The requesting charm object.
-            relation_name: The redis relation name.
-        """
-        self._charm = charm
-        self.relation_name = relation_name
-        # redis charm doesn't provide database id via the relation
-        self.database = ""
-        self.on = self._RedisDatabaseRequiresEventShim(
-            self._charm.on[relation_name].relation_changed
-        )
-
-    def fetch_relation_data(
-        self, fields: typing.List[str]
-    ) -> typing.Dict[int, typing.Dict[str, str]]:
-        """Mimic the fetch_relation_data method of DatabaseRequires class.
-
-        Args:
-            fields: fields to fetch from relation data.
-
-        Returns: required relation data.
-        """
-        data = {}
-        for relation in self._charm.model.relations[self.relation_name]:
-            endpoints = []
-            if relation.app is None:
-                continue
-            for unit in relation.units:
-                if not (hostname := relation.data[unit].get("hostname")):
-                    continue
-                if not (port := relation.data[unit].get("port")):
-                    continue
-                endpoints.append(f"{hostname}:{port}")
-            if endpoints:
-                data[relation.id] = (
-                    {"endpoints": ",".join(endpoints)} if "endpoints" in fields else {}
-                )
-        return data
 
 
 def make_database_requirers(
@@ -115,14 +51,10 @@ def make_database_requirers(
     # one database relation requirer is required for each of the database relations
     # create a dictionary to hold the requirers
     databases = {
-        name: (
-            DatabaseRequires(
-                charm,
-                relation_name=name,
-                database_name=database_name,
-            )
-            if name != "redis"
-            else _RedisDatabaseRequiresShim(charm, relation_name=name)
+        name: DatabaseRequires(
+            charm,
+            relation_name=name,
+            database_name=database_name,
         )
         for name in db_interfaces
     }
@@ -158,11 +90,6 @@ def get_uris(database_requirers: typing.Dict[str, DatabaseRequires]) -> typing.D
 
         if "uris" in data:
             db_uris[env_name] = data["uris"]
-            continue
-
-        if interface_name == "redis":
-            endpoint = data["endpoints"].split(",")[0]
-            db_uris[env_name] = f"{interface_name}://{endpoint}"
             continue
 
         # Check that the relation data is well formed according to the following json_schema:

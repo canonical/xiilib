@@ -48,29 +48,6 @@ def get_postgresql_database():
     return g.postgresql_db
 
 
-def get_mongodb_database() -> pymongo.database.Database | None:
-    """Get the mongodb db connection."""
-    if "mongodb_db" not in g:
-        if "MONGODB_DB_CONNECT_STRING" in os.environ:
-            uri = os.environ["MONGODB_DB_CONNECT_STRING"]
-            client = pymongo.MongoClient(uri)
-            db = urllib.parse.urlparse(uri).path.removeprefix("/")
-            g.mongodb_db = client.get_database(db)
-        else:
-            return None
-    return g.mongodb_db
-
-
-def get_redis_database() -> redis.Redis | None:
-    if "redis_db" not in g:
-        if "REDIS_DB_CONNECT_STRING" in os.environ:
-            uri = os.environ["REDIS_DB_CONNECT_STRING"]
-            g.redis_db = redis.Redis.from_url(uri)
-        else:
-            return None
-    return g.redis_db
-
-
 @app.teardown_appcontext
 def teardown_database(_):
     """Tear down databases connections."""
@@ -80,9 +57,6 @@ def teardown_database(_):
     postgresql_db = g.pop("postgresql_db", None)
     if postgresql_db is not None:
         postgresql_db.close()
-    mongodb_db = g.pop("mongodb_db", None)
-    if mongodb_db is not None:
-        mongodb_db.client.close()
 
 
 @app.route("/")
@@ -123,24 +97,6 @@ def postgresql_status():
             cursor.execute(sql)
             cursor.fetchone()
             return "SUCCESS"
-    return "FAIL"
-
-
-@app.route("/mongodb/status")
-def mongodb_status():
-    """Mongodb status endpoint."""
-    if (database := get_mongodb_database()) is not None:
-        database.list_collection_names()
-        return "SUCCESS"
-    return "FAIL"
-
-
-@app.route("/redis/status")
-def redis_status():
-    """Mongodb status endpoint."""
-    if database := get_redis_database():
-        database.set("foo", "bar")
-        return "SUCCESS"
     return "FAIL"
 
 
