@@ -2,7 +2,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Flask Charm service."""
+"""The base Gunicorn charm class for all WSGI application charms."""
 
 import logging
 import typing
