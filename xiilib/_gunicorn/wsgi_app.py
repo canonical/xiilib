@@ -135,9 +135,4 @@ class WsgiApp:  # pylint: disable=too-few-public-methods
             self._database_migration.run(
                 migration_command, self._wsgi_environment(), working_dir=app_dir
             )
-        try:
-            self._container.replan()
-        except ops.pebble.ChangeError:
-            self._container.stop(service_name)
-            time.sleep(10)
-            self._container.start(service_name)
+        self._container.replan()
