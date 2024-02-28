@@ -147,27 +147,3 @@ class CharmMixin(typing.Protocol):
     def _on_postgresql_database_relation_broken(self, _event: ops.RelationBrokenEvent) -> None:
         """Handle the postgresql's relation-broken event."""
         self.restart()
-
-    def _on_mongodb_database_database_created(self, _event: DatabaseRequiresEvent) -> None:
-        """Handle the mongodb's database-created event."""
-        self.restart()
-
-    def _on_mongodb_database_endpoints_changed(self, _event: DatabaseRequiresEvent) -> None:
-        """Handle the mysql's endpoints-changed event."""
-        self.restart()
-
-    def _on_mongodb_database_relation_broken(self, _event: ops.RelationBrokenEvent) -> None:
-        """Handle the mysql's relation-broken event."""
-        self.restart()
-
-    def _on_redis_database_database_created(self, _event: DatabaseRequiresEvent) -> None:
-        """Handle the mongodb's database-created event."""
-        self.restart()
-
-    def _on_redis_database_endpoints_changed(self, _event: DatabaseRequiresEvent) -> None:
-        """Handle the mysql's endpoints-changed event."""
-        self.restart()
-
-    def _on_redis_database_relation_broken(self, _event: ops.RelationBrokenEvent) -> None:
-        """Handle the mysql's relation-broken event."""
-        self.restart()

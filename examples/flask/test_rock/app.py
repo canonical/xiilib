@@ -7,12 +7,8 @@ import urllib.parse
 from urllib.parse import urlparse
 
 import psycopg
-import pymongo
-import pymongo.database
-import pymongo.errors
 import pymysql
 import pymysql.cursors
-import redis
 from flask import Flask, g, jsonify, request
 
 app = Flask(__name__)
