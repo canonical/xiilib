@@ -97,15 +97,6 @@ requires:
   mysql:
     interface: mysql_client
     limit: 1
-  mongodb:
-    interface: mongodb_client
-    limit: 1
-  redis:
-    interface: redis
-    limit: 1
-  s3-credentials:
-    interface: s3
-    limit: 1
 resources:
   flask-app-image:
     description: flask application image.

@@ -8,7 +8,6 @@ import pathlib
 import typing
 
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
-from charms.data_platform_libs.v0.s3 import S3Requirer
 
 # pydantic is causing this no-name-in-module problem
 from pydantic import AnyHttpUrl, BaseModel, parse_obj_as  # pylint: disable=no-name-in-module
@@ -51,7 +50,6 @@ class GunicornCharmState(abc.ABC):  # pylint: disable=too-many-instance-attribut
         container_name: The name of the WSGI application container.
         base_dir: The project base directory in the WSGI application container.
         app_dir: The WSGI application directory in the WSGI application container.
-        s3: the S3 compatible API credentials.
     """
 
     def __init__(  # pylint: disable=too-many-arguments
@@ -62,7 +60,6 @@ class GunicornCharmState(abc.ABC):  # pylint: disable=too-many-instance-attribut
         is_secret_storage_ready: bool,
         app_config: dict[str, int | str | bool] | None = None,
         database_requirers: dict[str, DatabaseRequires] | None = None,
-        s3_requirer: S3Requirer | None = None,
         wsgi_config: dict[str, int | str] | None = None,
         secret_key: str | None = None,
     ):
@@ -76,7 +73,6 @@ class GunicornCharmState(abc.ABC):  # pylint: disable=too-many-instance-attribut
             wsgi_config: The value of the flask_config charm configuration.
             secret_key: The secret storage manager associated with the charm.
             database_requirers: All declared database requirers.
-            s3_requirer: The S3Requirer object.
         """
         self.framework = framework
         self.service_name = self.framework
@@ -92,7 +88,6 @@ class GunicornCharmState(abc.ABC):  # pylint: disable=too-many-instance-attribut
         self._is_secret_storage_ready = is_secret_storage_ready
         self._secret_key = secret_key
         self._database_requirers = database_requirers if database_requirers else {}
-        self._s3_requirer = s3_requirer if s3_requirer is not None else None
 
     @property
     def proxy(self) -> "ProxyConfig":
@@ -179,14 +174,3 @@ class GunicornCharmState(abc.ABC):  # pylint: disable=too-many-instance-attribut
             A dictionary of database types and database URIs.
         """
         return get_uris(self._database_requirers)
-
-    @property
-    def s3(self) -> dict[str, str]:
-        """Return the s3 connection info.
-
-        Returns:
-            A dictionary contains the s3 compatible API connection info.
-        """
-        if self._s3_requirer is None:
-            return {}
-        return {k: v for k, v in self._s3_requirer.get_s3_connection_info().items() if k != "data"}

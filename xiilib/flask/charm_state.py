@@ -8,7 +8,6 @@ import typing
 
 import ops
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
-from charms.data_platform_libs.v0.s3 import S3Requirer
 
 # pydantic is causing this no-name-in-module problem
 from pydantic import (  # pylint: disable=no-name-in-module
@@ -74,7 +73,6 @@ class CharmState(GunicornCharmState):  # pylint: disable=too-many-instance-attri
         charm: ops.CharmBase,
         secret_storage: GunicornSecretStorage,
         database_requirers: dict[str, DatabaseRequires],
-        s3_requirer: S3Requirer | None = None,
     ) -> "CharmState":
         """Initialize a new instance of the CharmState class from the associated charm.
 
@@ -82,7 +80,6 @@ class CharmState(GunicornCharmState):  # pylint: disable=too-many-instance-attri
             charm: The charm instance associated with this state.
             secret_storage: The secret storage manager associated with the charm.
             database_requirers: All database requirers object declared by the charm.
-            s3_requirer: The S3Requirer object associated with the charm.
 
         Return:
             The CharmState instance created by the provided charm.
@@ -120,5 +117,4 @@ class CharmState(GunicornCharmState):  # pylint: disable=too-many-instance-attri
                 secret_storage.get_secret_key() if secret_storage.is_initialized else None
             ),
             is_secret_storage_ready=secret_storage.is_initialized,
-            s3_requirer=s3_requirer,
         )

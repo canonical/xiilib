@@ -38,14 +38,12 @@ class Charm(ops.CharmBase, CharmMixin):  # pylint: disable=too-many-instance-att
         super().__init__(*args)
         self._secret_storage = GunicornSecretStorage(charm=self, key="flask_secret_key")
         self._database_requirers = make_database_requirers(self, self.app.name)
-        self._s3_requirer = self._create_s3_requirer()
 
         try:
             self._charm_state = CharmState.from_charm(
                 charm=self,
                 secret_storage=self._secret_storage,
                 database_requirers=self._database_requirers,
-                s3_requirer=self._s3_requirer,
             )
         except CharmConfigInvalidError as exc:
             self._update_app_and_unit_status(ops.BlockedStatus(exc.msg))
