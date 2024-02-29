@@ -16,7 +16,7 @@ from ops.pebble import ExecError, PathError
 from xiilib.exceptions import CharmConfigInvalidError
 
 if typing.TYPE_CHECKING:
-    from xiilib._gunicorn.charm_state import GunicornCharmState
+    from xiilib._gunicorn.charm_state import CharmState
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class GunicornWebserver:  # pylint: disable=too-few-public-methods
 
     def __init__(
         self,
-        charm_state: "GunicornCharmState",
+        charm_state: "CharmState",
         container: ops.Container,
     ):
         """Initialize a new instance of the GunicornWebserver class.

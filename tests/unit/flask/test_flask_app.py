@@ -12,9 +12,9 @@ import unittest.mock
 
 import pytest
 
+from xiilib._gunicorn.charm_state import CharmState
 from xiilib._gunicorn.webserver import WebserverConfig
 from xiilib._gunicorn.wsgi_app import WsgiApp
-from xiilib.flask.charm_state import CharmState
 
 
 @pytest.mark.parametrize(

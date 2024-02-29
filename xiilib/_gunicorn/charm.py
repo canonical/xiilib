@@ -3,58 +3,95 @@
 # See LICENSE file for licensing details.
 
 """The base Gunicorn charm class for all WSGI application charms."""
-
+import abc
 import logging
+import pathlib
 import typing
 
 import ops
-from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires, DatabaseRequiresEvent
+from charms.data_platform_libs.v0.data_interfaces import DatabaseRequiresEvent
 from charms.traefik_k8s.v2.ingress import IngressPerAppRequirer
+from pydantic import BaseModel  # pylint: disable=no-name-in-module
 
 from xiilib._gunicorn.observability import Observability
 from xiilib._gunicorn.wsgi_app import WsgiApp
 from xiilib.database_migration import DatabaseMigration, DatabaseMigrationStatus
-from xiilib.databases import Databases
+from xiilib.databases import Databases, make_database_requirers
 from xiilib.exceptions import CharmConfigInvalidError
 
 from .._gunicorn.secret_storage import GunicornSecretStorage
-from .charm_state import GunicornCharmState
+from .charm_state import CharmState
+from .webserver import GunicornWebserver
 
 logger = logging.getLogger(__name__)
 
 
-class CharmMixin(typing.Protocol):
+class CharmMixin(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
     """Gunicorn-based charm service mixin."""
 
-    _secret_storage: GunicornSecretStorage
-    _charm_state: GunicornCharmState
-    _database_migration: DatabaseMigration
-    _wsgi_app: WsgiApp
-    _database_requirers: dict[str, DatabaseRequires]
-    _databases: Databases
-    _ingress: IngressPerAppRequirer
-    _observability: Observability
-    framework: ops.Framework
+    @abc.abstractmethod
+    def get_wsgi_config(self) -> BaseModel:
+        """Return the framework related configurations."""
 
-    @property
-    def unit(self) -> ops.Unit:
-        """Return the ops charm unit object."""
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
+        """Initialize the instance.
 
-    @property
-    def app(self) -> ops.Application:
-        """Typing constrain for the ops.CharmBase class."""
+        Args:
+            args: passthrough to CharmBase.
+            kwargs: passthrough to CharmBase.
+        """
+        super().__init__(*args, **kwargs)
+        self._secret_storage = GunicornSecretStorage(charm=self, key="flask_secret_key")
+        self._database_requirers = make_database_requirers(self, self.app.name)
+        try:
+            wsgi_config = self.get_wsgi_config()
+        except CharmConfigInvalidError as exc:
+            self._update_app_and_unit_status(ops.BlockedStatus(exc.msg))
+            return
 
-    def _observe_default(self) -> None:
-        """Attach all charm event handlers."""
-        # can't type this because of the lack of intersection types in Python
-        on: ops.CharmEvents = self.on  # type: ignore
-        self.framework.observe(on.config_changed, self._on_config_changed)
-        self.framework.observe(on.rotate_secret_key_action, self._on_rotate_secret_key_action)
+        self._charm_state = CharmState.from_charm(
+            charm=self,
+            wsgi_config=wsgi_config,
+            secret_storage=self._secret_storage,
+            database_requirers=self._database_requirers,
+        )
+        self._database_migration = DatabaseMigration(
+            container=self.unit.get_container(self._charm_state.container_name),
+            state_dir=self._charm_state.state_dir,
+        )
+        webserver = GunicornWebserver(
+            charm_state=self._charm_state,
+            container=self.unit.get_container(self._charm_state.container_name),
+        )
+        self._wsgi_app = WsgiApp(
+            charm=self,
+            charm_state=self._charm_state,
+            webserver=webserver,
+            database_migration=self._database_migration,
+        )
+        self._databases = Databases(
+            charm=self,
+            application=self._wsgi_app,
+            database_requirers=self._database_requirers,
+        )
+        self._ingress = IngressPerAppRequirer(
+            self,
+            port=self._charm_state.port,
+            strip_prefix=True,
+        )
+        self._observability = Observability(
+            self,
+            charm_state=self._charm_state,
+            container_name=self._charm_state.container_name,
+            cos_dir=str((pathlib.Path(__file__).parent / "cos").absolute()),
+        )
+        self.framework.observe(self.on.config_changed, self._on_config_changed)
+        self.framework.observe(self.on.rotate_secret_key_action, self._on_rotate_secret_key_action)
         self.framework.observe(
-            on.secret_storage_relation_changed,
+            self.on.secret_storage_relation_changed,
             self._on_secret_storage_relation_changed,
         )
-        self.framework.observe(on.update_status, self._on_update_status)
+        self.framework.observe(self.on.update_status, self._on_update_status)
         for database, database_requirer in self._database_requirers.items():
             self.framework.observe(
                 database_requirer.on.database_created,
@@ -65,7 +102,7 @@ class CharmMixin(typing.Protocol):
                 getattr(self, f"_on_{database}_database_endpoints_changed"),
             )
             self.framework.observe(
-                on[database_requirer.relation_name].relation_broken,
+                self.on[database_requirer.relation_name].relation_broken,
                 getattr(self, f"_on_{database}_database_relation_broken"),
             )
 

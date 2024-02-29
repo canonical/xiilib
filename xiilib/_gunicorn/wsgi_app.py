@@ -8,7 +8,7 @@ import logging
 
 import ops
 
-from xiilib._gunicorn.charm_state import GunicornCharmState
+from xiilib._gunicorn.charm_state import CharmState
 from xiilib._gunicorn.webserver import GunicornWebserver
 from xiilib.database_migration import DatabaseMigration
 
@@ -21,7 +21,7 @@ class WsgiApp:  # pylint: disable=too-few-public-methods
     def __init__(
         self,
         charm: ops.CharmBase,
-        charm_state: GunicornCharmState,
+        charm_state: CharmState,
         webserver: GunicornWebserver,
         database_migration: DatabaseMigration,
     ):

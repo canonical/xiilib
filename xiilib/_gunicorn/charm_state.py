@@ -7,11 +7,13 @@ import os
 import pathlib
 import typing
 
+import ops
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
 
 # pydantic is causing this no-name-in-module problem
 from pydantic import AnyHttpUrl, BaseModel, parse_obj_as  # pylint: disable=no-name-in-module
 
+from xiilib._gunicorn.secret_storage import GunicornSecretStorage
 from xiilib._gunicorn.webserver import WebserverConfig
 from xiilib.databases import get_uris
 
@@ -31,7 +33,7 @@ class ProxyConfig(BaseModel):  # pylint: disable=too-few-public-methods
 
 
 # too-many-instance-attributes is okay since we use a factory function to construct the CharmState
-class GunicornCharmState(abc.ABC):  # pylint: disable=too-many-instance-attributes
+class CharmState(abc.ABC):  # pylint: disable=too-many-instance-attributes
     """Represents the state of the Flask charm.
 
     Attrs:
@@ -88,6 +90,43 @@ class GunicornCharmState(abc.ABC):  # pylint: disable=too-many-instance-attribut
         self._is_secret_storage_ready = is_secret_storage_ready
         self._secret_key = secret_key
         self._database_requirers = database_requirers if database_requirers else {}
+
+    @classmethod
+    def from_charm(
+        cls,
+        charm: ops.CharmBase,
+        wsgi_config: BaseModel,
+        secret_storage: GunicornSecretStorage,
+        database_requirers: dict[str, DatabaseRequires],
+    ) -> "CharmState":
+        """Initialize a new instance of the CharmState class from the associated charm.
+
+        Args:
+            charm: The charm instance associated with this state.
+            wsgi_config: The WSGI framework specific configurations.
+            secret_storage: The secret storage manager associated with the charm.
+            database_requirers: All database requirers object declared by the charm.
+
+        Return:
+            The CharmState instance created by the provided charm.
+        """
+        app_config = {
+            k.replace("-", "_"): v
+            for k, v in charm.config.items()
+            if not any(k.startswith(prefix) for prefix in ("flask-", "webserver-"))
+        }
+        app_config = {k: v for k, v in app_config.items() if k not in wsgi_config.dict().keys()}
+        return cls(
+            framework="flask",
+            wsgi_config=wsgi_config.dict(exclude_unset=True, exclude_none=True),
+            app_config=typing.cast(dict[str, str | int | bool], app_config),
+            database_requirers=database_requirers,
+            webserver_config=WebserverConfig.from_charm(charm),
+            secret_key=(
+                secret_storage.get_secret_key() if secret_storage.is_initialized else None
+            ),
+            is_secret_storage_ready=secret_storage.is_initialized,
+        )
 
     @property
     def proxy(self) -> "ProxyConfig":

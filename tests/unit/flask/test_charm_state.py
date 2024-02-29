@@ -7,8 +7,9 @@ import unittest.mock
 
 import pytest
 
+from xiilib._gunicorn.charm_state import CharmState
 from xiilib.exceptions import CharmConfigInvalidError
-from xiilib.flask.charm_state import CharmState
+from xiilib.flask.charm import Charm, FlaskConfig
 
 # this is a unit test file
 # pylint: disable=protected-access
@@ -46,9 +47,11 @@ def test_charm_state_flask_config(charm_config: dict, flask_config: dict) -> Non
     """
     config = copy.copy(DEFAULT_CHARM_CONFIG)
     config.update(charm_config)
+    charm = unittest.mock.MagicMock(config=config)
     charm_state = CharmState.from_charm(
+        wsgi_config=Charm.get_wsgi_config(charm),
         secret_storage=SECRET_STORAGE_MOCK,
-        charm=unittest.mock.MagicMock(config=config),
+        charm=charm,
         database_requirers={},
     )
     assert charm_state.wsgi_config == flask_config
@@ -73,10 +76,12 @@ def test_charm_state_invalid_flask_config(charm_config: dict) -> None:
     """
     config = copy.copy(DEFAULT_CHARM_CONFIG)
     config.update(charm_config)
+    charm = unittest.mock.MagicMock(config=config)
     with pytest.raises(CharmConfigInvalidError) as exc:
         CharmState.from_charm(
+            wsgi_config=Charm.get_wsgi_config(charm),
             secret_storage=SECRET_STORAGE_MOCK,
-            charm=unittest.mock.MagicMock(config=config),
+            charm=charm,
             database_requirers={},
         )
     for config_key in charm_config:

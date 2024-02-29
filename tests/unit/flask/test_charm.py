@@ -10,9 +10,10 @@ import unittest.mock
 
 from ops.testing import Harness
 
+from xiilib._gunicorn.charm_state import CharmState
 from xiilib._gunicorn.webserver import GunicornWebserver
 from xiilib._gunicorn.wsgi_app import WsgiApp
-from xiilib.flask.charm_state import CharmState
+from xiilib.flask import Charm
 
 from .constants import DEFAULT_LAYER
 
@@ -32,7 +33,10 @@ def test_flask_pebble_layer(harness: Harness) -> None:
     test_key = "0" * 16
     secret_storage.get_secret_key.return_value = test_key
     charm_state = CharmState.from_charm(
-        charm=harness.charm, secret_storage=secret_storage, database_requirers={}
+        wsgi_config=Charm.get_wsgi_config(harness.charm),
+        charm=harness.charm,
+        secret_storage=secret_storage,
+        database_requirers={},
     )
     webserver = GunicornWebserver(
         charm_state=charm_state,
