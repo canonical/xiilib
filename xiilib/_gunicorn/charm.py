@@ -26,7 +26,7 @@ from .webserver import GunicornWebserver
 logger = logging.getLogger(__name__)
 
 
-class CharmMixin(ops.CharmBase):  # pylint: disable=too-many-instance-attributes
+class GunicornBase(abc.ABC, ops.CharmBase):  # pylint: disable=too-many-instance-attributes
     """Gunicorn-based charm service mixin."""
 
     @abc.abstractmethod

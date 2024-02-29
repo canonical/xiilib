@@ -20,7 +20,7 @@ from pydantic import (  # pylint: disable=no-name-in-module
     validator,
 )
 
-from xiilib._gunicorn.charm import CharmMixin
+from xiilib._gunicorn.charm import GunicornBase
 from xiilib.exceptions import CharmConfigInvalidError
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ class FlaskConfig(BaseModel, extra=Extra.allow):  # pylint: disable=too-few-publ
         return value.upper()
 
 
-class Charm(CharmMixin):  # pylint: disable=too-many-instance-attributes
+class Charm(GunicornBase):  # pylint: disable=too-many-instance-attributes
     """Flask Charm service."""
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
