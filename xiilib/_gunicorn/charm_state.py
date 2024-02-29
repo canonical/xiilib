@@ -2,7 +2,6 @@
 # See LICENSE file for licensing details.
 
 """This module defines the CharmState class which represents the state of the Flask charm."""
-import abc
 import os
 import pathlib
 import typing
@@ -33,7 +32,7 @@ class ProxyConfig(BaseModel):  # pylint: disable=too-few-public-methods
 
 
 # too-many-instance-attributes is okay since we use a factory function to construct the CharmState
-class CharmState(abc.ABC):  # pylint: disable=too-many-instance-attributes
+class CharmState:  # pylint: disable=too-many-instance-attributes
     """Represents the state of the Flask charm.
 
     Attrs:
