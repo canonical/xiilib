@@ -64,7 +64,7 @@ class GunicornBase(abc.ABC, ops.CharmBase):  # pylint: disable=too-many-instance
             container=self.unit.get_container(self._charm_state.container_name),
         )
         self._wsgi_app = WsgiApp(
-            charm=self,
+            container=self.unit.get_container(f"{self._charm_state.framework}-app"),
             charm_state=self._charm_state,
             webserver=webserver,
             database_migration=self._database_migration,

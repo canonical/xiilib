@@ -43,7 +43,7 @@ def test_database_migration(harness: Harness):
         container=container, state_dir=pathlib.Path("/flask/state")
     )
     flask_app = WsgiApp(
-        charm=harness.charm,
+        container=container,
         charm_state=charm_state,
         webserver=webserver,
         database_migration=database_migration,
@@ -112,7 +112,7 @@ def test_database_migrate_command(harness: Harness, file: str, command: list[str
         container=container, state_dir=pathlib.Path("/flask/state")
     )
     flask_app = WsgiApp(
-        charm=harness.charm,
+        container=container,
         charm_state=charm_state,
         webserver=webserver,
         database_migration=database_migration,

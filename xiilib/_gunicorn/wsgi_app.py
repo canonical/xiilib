@@ -20,7 +20,7 @@ class WsgiApp:  # pylint: disable=too-few-public-methods
 
     def __init__(
         self,
-        charm: ops.CharmBase,
+        container: ops.Container,
         charm_state: CharmState,
         webserver: GunicornWebserver,
         database_migration: DatabaseMigration,
@@ -28,13 +28,13 @@ class WsgiApp:  # pylint: disable=too-few-public-methods
         """Construct the WsgiApp instance.
 
         Args:
-            charm: The main charm object.
+            container: The WSGI application container.
             charm_state: The state of the charm.
             webserver: The webserver manager object.
             database_migration: The database migration manager object.
         """
         self._charm_state = charm_state
-        self._container = charm.unit.get_container(f"{self._charm_state.framework}-app")
+        self._container = container
         self._webserver = webserver
         self._database_migration = database_migration
 

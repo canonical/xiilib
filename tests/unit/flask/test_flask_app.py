@@ -41,7 +41,7 @@ def test_flask_env(flask_config: dict, app_config: dict, database_migration_mock
         app_config=app_config,
     )
     flask_app = WsgiApp(
-        charm=unittest.mock.MagicMock(),
+        container=unittest.mock.MagicMock(),
         charm_state=charm_state,
         webserver=unittest.mock.MagicMock(),
         database_migration=database_migration_mock,
@@ -103,7 +103,7 @@ def test_http_proxy(
         is_secret_storage_ready=True,
     )
     flask_app = WsgiApp(
-        charm=unittest.mock.MagicMock(),
+        container=unittest.mock.MagicMock(),
         charm_state=charm_state,
         webserver=unittest.mock.MagicMock(),
         database_migration=database_migration_mock,

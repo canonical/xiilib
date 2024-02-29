@@ -43,7 +43,7 @@ def test_flask_pebble_layer(harness: Harness) -> None:
         container=container,
     )
     flask_app = WsgiApp(
-        charm=harness.charm,
+        container=container,
         charm_state=charm_state,
         webserver=webserver,
         database_migration=harness.charm._database_migration,

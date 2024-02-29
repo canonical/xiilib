@@ -77,7 +77,7 @@ def test_gunicorn_config(
         container=container,
     )
     flask_app = WsgiApp(
-        charm=harness.charm,
+        container=container,
         charm_state=charm_state,
         webserver=webserver,
         database_migration=database_migration_mock,
@@ -116,7 +116,7 @@ def test_webserver_reload(monkeypatch, harness: Harness, is_running, database_mi
         container=container,
     )
     flask_app = WsgiApp(
-        charm=harness.charm,
+        container=container,
         charm_state=charm_state,
         webserver=webserver,
         database_migration=database_migration_mock,
