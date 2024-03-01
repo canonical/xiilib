@@ -1,7 +1,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Provide the SecretStorage for managing the persistent secret storage for the Flask charm."""
+"""Provide the SecretStorage for managing the persistent secret storage for the charm."""
 import secrets
 
 import ops

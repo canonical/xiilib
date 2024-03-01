@@ -54,14 +54,14 @@ class WsgiApp:  # pylint: disable=too-few-public-methods
 
         The WSGI environment generation follows these rules:
             1. User-defined configuration cannot overwrite built-in WSGI configurations, even if
-                the built-in Flask configuration value is None (undefined).
+                the built-in WSGI application configuration value is None (undefined).
             2. Boolean and integer-typed configuration values will be JSON encoded before
                 being passed to application.
             3. String-typed configuration values will be passed to the application as environment
                 variables directly.
 
         Returns:
-            A dictionary representing the Flask environment variables.
+            A dictionary representing the WSGI application environment variables.
         """
         config = self._charm_state.app_config
         config.update(self._charm_state.wsgi_config)

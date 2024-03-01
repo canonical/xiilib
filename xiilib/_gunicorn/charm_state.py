@@ -1,7 +1,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""This module defines the CharmState class which represents the state of the Flask charm."""
+"""This module defines the CharmState class which represents the state of the charm."""
 import os
 import pathlib
 import typing
@@ -33,18 +33,18 @@ class ProxyConfig(BaseModel):  # pylint: disable=too-few-public-methods
 
 # too-many-instance-attributes is okay since we use a factory function to construct the CharmState
 class CharmState:  # pylint: disable=too-many-instance-attributes
-    """Represents the state of the Flask charm.
+    """Represents the state of the Gunicorn based charm.
 
     Attrs:
         webserver_config: the web server configuration file content for the charm.
-        wsgi_config: the value of the flask_config charm configuration.
-        app_config: user-defined configurations for the Flask application.
+        wsgi_config: the value of the WSGI specific charm configuration.
+        app_config: user-defined configurations for the WSGI application.
         database_uris: a mapping of available database environment variable to database uris.
-        port: the port number to use for the Flask server.
-        application_log_file: the file path for the Flask access log.
-        application_error_log_file: the file path for the Flask error log.
-        statsd_host: the statsd server host for Flask metrics.
-        secret_key: the charm managed flask secret key.
+        port: the port number to use for the WSGI server.
+        application_log_file: the file path for the WSGI application access log.
+        application_error_log_file: the file path for the WSGI application error log.
+        statsd_host: the statsd server host for WSGI application metrics.
+        secret_key: the charm managed WSGI application secret key.
         is_secret_storage_ready: whether the secret storage system is ready.
         proxy: proxy information.
         service_name: The WSGI application pebble service name.
@@ -70,8 +70,8 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
             framework: the framework name.
             webserver_config: the Gunicorn webserver configuration.
             is_secret_storage_ready: whether the secret storage system is ready.
-            app_config: User-defined configuration values for the Flask configuration.
-            wsgi_config: The value of the flask_config charm configuration.
+            app_config: User-defined configuration values for the WSGI application configuration.
+            wsgi_config: The value of the WSGI application specific charm configuration.
             secret_key: The secret storage manager associated with the charm.
             database_requirers: All declared database requirers.
         """
@@ -147,51 +147,52 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
 
     @property
     def wsgi_config(self) -> dict[str, str | int | bool]:
-        """Get the value of the flask_config charm configuration.
+        """Get the value of the WSGI application specific configuration.
 
         Returns:
-            The value of the flask_config charm configuration.
+            The value of the WSGI application specific configuration.
         """
         return self._wsgi_config
 
     @property
     def app_config(self) -> dict[str, str | int | bool]:
-        """Get the value of user-defined Flask application configurations.
+        """Get the value of user-defined application configurations.
 
         Returns:
-            The value of user-defined Flask application configurations.
+            The value of user-defined application configurations.
         """
         return self._app_config
 
     @property
     def port(self) -> int:
-        """Gets the port number to use for the Flask server.
+        """Gets the port number to use for the Gunicorn server.
 
         Returns:
-            The port number to use for the Flask server.
+            The port number to use for the Gunicorn server.
         """
         return 8000
 
     @property
     def statsd_host(self) -> str:
-        """Returns the statsd server host for Flask metrics.
+        """Returns the statsd server host for Gunicorn metrics.
 
         Returns:
-            The statsd server host for Flask metrics.
+            The statsd server host for Gunicorn metrics.
         """
         return "localhost:9125"
 
     @property
     def secret_key(self) -> str:
-        """Return the flask secret key stored in the SecretStorage.
+        """Return the WSGI application secret key stored in the SecretStorage.
 
         It's an error to read the secret key before SecretStorage is initialized.
 
         Returns:
-            The flask secret key stored in the SecretStorage.
+            The WSGI application secret key stored in the SecretStorage.
 
         Raises:
-            RuntimeError: raised when accessing flask secret key before secret storage is ready
+            RuntimeError: raised when accessing WSGI application secret key before
+                          secret storage is ready.
         """
         if self._secret_key is None:
             raise RuntimeError("access secret key before secret storage is ready")
