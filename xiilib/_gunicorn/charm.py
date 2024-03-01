@@ -156,9 +156,9 @@ class GunicornBase(abc.ABC, ops.CharmBase):  # pylint: disable=too-many-instance
         """Restart or start the flask service if not started with the latest configuration."""
         try:
             self._wsgi_app.restart()
-            self._update_app_and_unit_status(ops.ActiveStatus())
         except CharmConfigInvalidError as exc:
             self._update_app_and_unit_status(ops.BlockedStatus(exc.msg))
+        self._update_app_and_unit_status(ops.ActiveStatus())
 
     def _on_update_status(self, _: ops.HookEvent) -> None:
         """Handle the update-status event."""
