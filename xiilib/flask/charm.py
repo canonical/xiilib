@@ -7,6 +7,7 @@
 """Flask Charm service."""
 import itertools
 import logging
+import pathlib
 import typing
 
 import ops
@@ -100,6 +101,14 @@ class Charm(GunicornBase):  # pylint: disable=too-many-instance-attributes
             )
             error_field_str = " ".join(f"flask-{f}".replace("_", "-") for f in error_fields)
             raise CharmConfigInvalidError(f"invalid configuration: {error_field_str}") from exc
+
+    def get_cos_dir(self) -> str:
+        """Return the directory with COS related files.
+
+        Returns:
+            Return the directory with COS related files.
+        """
+        return str((pathlib.Path(__file__).parent / "cos").absolute())
 
     def _on_flask_app_pebble_ready(self, _: ops.PebbleReadyEvent) -> None:
         """Handle the pebble-ready event."""

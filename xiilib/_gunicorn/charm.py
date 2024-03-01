@@ -5,7 +5,6 @@
 """The base Gunicorn charm class for all WSGI application charms."""
 import abc
 import logging
-import pathlib
 import typing
 
 import ops
@@ -13,15 +12,14 @@ from charms.data_platform_libs.v0.data_interfaces import DatabaseRequiresEvent
 from charms.traefik_k8s.v2.ingress import IngressPerAppRequirer
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 
+from xiilib._gunicorn.charm_state import CharmState
 from xiilib._gunicorn.observability import Observability
+from xiilib._gunicorn.secret_storage import GunicornSecretStorage
+from xiilib._gunicorn.webserver import GunicornWebserver
 from xiilib._gunicorn.wsgi_app import WsgiApp
 from xiilib.database_migration import DatabaseMigration, DatabaseMigrationStatus
 from xiilib.databases import Databases, make_database_requirers
 from xiilib.exceptions import CharmConfigInvalidError
-
-from .._gunicorn.secret_storage import GunicornSecretStorage
-from .charm_state import CharmState
-from .webserver import GunicornWebserver
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +30,10 @@ class GunicornBase(abc.ABC, ops.CharmBase):  # pylint: disable=too-many-instance
     @abc.abstractmethod
     def get_wsgi_config(self) -> BaseModel:
         """Return the framework related configurations."""
+
+    @abc.abstractmethod
+    def get_cos_dir(self) -> str:
+        """Return the directory with COS related files."""
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         """Initialize the instance.
@@ -83,7 +85,7 @@ class GunicornBase(abc.ABC, ops.CharmBase):  # pylint: disable=too-many-instance
             self,
             charm_state=self._charm_state,
             container_name=self._charm_state.container_name,
-            cos_dir=str((pathlib.Path(__file__).parent / "cos").absolute()),
+            cos_dir=self.get_cos_dir(),
         )
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.rotate_secret_key_action, self._on_rotate_secret_key_action)
