@@ -158,7 +158,7 @@ class GunicornBase(abc.ABC, ops.CharmBase):  # pylint: disable=too-many-instance
             self._wsgi_app.restart()
         except CharmConfigInvalidError as exc:
             self._update_app_and_unit_status(ops.BlockedStatus(exc.msg))
-            return 
+            return
         self._update_app_and_unit_status(ops.ActiveStatus())
 
     def _on_update_status(self, _: ops.HookEvent) -> None:
