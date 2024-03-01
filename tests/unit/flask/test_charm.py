@@ -35,6 +35,7 @@ def test_flask_pebble_layer(harness: Harness) -> None:
     charm_state = CharmState.from_charm(
         wsgi_config=Charm.get_wsgi_config(harness.charm),
         charm=harness.charm,
+        framework="flask",
         secret_storage=secret_storage,
         database_requirers={},
     )

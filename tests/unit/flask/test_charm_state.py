@@ -49,6 +49,7 @@ def test_charm_state_flask_config(charm_config: dict, flask_config: dict) -> Non
     config.update(charm_config)
     charm = unittest.mock.MagicMock(config=config)
     charm_state = CharmState.from_charm(
+        framework="flask",
         wsgi_config=Charm.get_wsgi_config(charm),
         secret_storage=SECRET_STORAGE_MOCK,
         charm=charm,

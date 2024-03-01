@@ -91,9 +91,10 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         self._database_requirers = database_requirers if database_requirers else {}
 
     @classmethod
-    def from_charm(
+    def from_charm(  # pylint: disable=too-many-arguments
         cls,
         charm: ops.CharmBase,
+        framework: str,
         wsgi_config: BaseModel,
         secret_storage: GunicornSecretStorage,
         database_requirers: dict[str, DatabaseRequires],
@@ -102,6 +103,7 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
 
         Args:
             charm: The charm instance associated with this state.
+            framework: The WSGI framework name.
             wsgi_config: The WSGI framework specific configurations.
             secret_storage: The secret storage manager associated with the charm.
             database_requirers: All database requirers object declared by the charm.
@@ -116,7 +118,7 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         }
         app_config = {k: v for k, v in app_config.items() if k not in wsgi_config.dict().keys()}
         return cls(
-            framework="flask",
+            framework=framework,
             wsgi_config=wsgi_config.dict(exclude_unset=True, exclude_none=True),
             app_config=typing.cast(dict[str, str | int | bool], app_config),
             database_requirers=database_requirers,
@@ -150,7 +152,7 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         Returns:
             The value of the flask_config charm configuration.
         """
-        return self._wsgi_config.copy()
+        return self._wsgi_config
 
     @property
     def app_config(self) -> dict[str, str | int | bool]:
@@ -159,7 +161,7 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         Returns:
             The value of user-defined Flask application configurations.
         """
-        return self._app_config.copy()
+        return self._app_config
 
     @property
     def port(self) -> int:

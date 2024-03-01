@@ -5,7 +5,6 @@
 """The base Gunicorn charm class for all WSGI application charms."""
 import abc
 import logging
-import typing
 
 import ops
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequiresEvent
@@ -35,15 +34,17 @@ class GunicornBase(abc.ABC, ops.CharmBase):  # pylint: disable=too-many-instance
     def get_cos_dir(self) -> str:
         """Return the directory with COS related files."""
 
-    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
+    def __init__(self, framework: ops.Framework, wsgi_framework: str) -> None:
         """Initialize the instance.
 
         Args:
-            args: passthrough to CharmBase.
-            kwargs: passthrough to CharmBase.
+            framework: operator framework.
+            wsgi_framework: WSGI framework name.
         """
-        super().__init__(*args, **kwargs)
-        self._secret_storage = GunicornSecretStorage(charm=self, key="flask_secret_key")
+        super().__init__(framework)
+        self._secret_storage = GunicornSecretStorage(
+            charm=self, key=f"{wsgi_framework}_secret_key"
+        )
         self._database_requirers = make_database_requirers(self, self.app.name)
         try:
             wsgi_config = self.get_wsgi_config()
@@ -53,6 +54,7 @@ class GunicornBase(abc.ABC, ops.CharmBase):  # pylint: disable=too-many-instance
 
         self._charm_state = CharmState.from_charm(
             charm=self,
+            framework=wsgi_framework,
             wsgi_config=wsgi_config,
             secret_storage=self._secret_storage,
             database_requirers=self._database_requirers,

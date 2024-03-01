@@ -8,7 +8,6 @@
 import itertools
 import logging
 import pathlib
-import typing
 
 import ops
 
@@ -69,14 +68,13 @@ class FlaskConfig(BaseModel, extra=Extra.allow):  # pylint: disable=too-few-publ
 class Charm(GunicornBase):  # pylint: disable=too-many-instance-attributes
     """Flask Charm service."""
 
-    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
+    def __init__(self, framework: ops.Framework) -> None:
         """Initialize the Flask charm.
 
         Args:
-            args: passthrough to CharmBase.
-            kwargs: passthrough to CharmBase
+            framework: operator framework.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(framework=framework, wsgi_framework="flask")
         self.framework.observe(self.on.flask_app_pebble_ready, self._on_flask_app_pebble_ready)
 
     def get_wsgi_config(self) -> BaseModel:

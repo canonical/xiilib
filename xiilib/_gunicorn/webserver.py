@@ -52,7 +52,7 @@ class WebserverConfig:
             "timeout": self.timeout,
         }.items()
 
-    @classmethod  # type: ignore
+    @classmethod
     def from_charm(cls, charm: ops.CharmBase) -> "WebserverConfig":
         """Create a WebserverConfig object from a charm object.
 
