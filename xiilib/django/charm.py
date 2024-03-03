@@ -8,14 +8,14 @@ import pathlib
 import secrets
 
 import ops
-from ops import ActiveStatus
 from charms.traefik_k8s.v2.ingress import IngressPerAppRequirer
+from ops import ActiveStatus
 
 from .databases import Databases, DatabasesEvents
-from .once import RunOnce, RunOnceStatus
-from .server import GunicornServer, WebserverError
 from .observability import Observability
+from .once import RunOnce, RunOnceStatus
 from .secret_storage import SecretStorage
+from .server import GunicornServer, WebserverError
 
 
 class Charm(ops.CharmBase):
@@ -124,6 +124,7 @@ class Charm(ops.CharmBase):
                 ["python3", "manage.py", "migrate"],
                 environment=self.gen_env(),
                 working_dir=str(self._BASE_DIR / "app"),
+                user="_daemon_",
             )
             self.unit.status = status
             if not migration_ok:

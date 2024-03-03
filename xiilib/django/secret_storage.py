@@ -8,14 +8,11 @@ import typing
 import ops
 
 
-class SecretStorageReady(ops.EventBase):
-    def __init__(self, handle, initial_value: dict[str, str]):
-        super().__init__(handle)
-        self.initial_value = initial_value
+class SecretStorageReady(ops.EventBase): ...
 
 
-class DatabasesEvents(ops.ObjectEvents):
-    all_databases_ready = ops.EventSource(SecretStorageReady)
+class SecretStorageEvents(ops.ObjectEvents):
+    secret_storage_ready = ops.EventSource(SecretStorageReady)
 
 
 class SecretStorage(ops.Object, abc.ABC):
@@ -24,6 +21,8 @@ class SecretStorage(ops.Object, abc.ABC):
     Attrs:
         is_initialized: True if the SecretStorage has been initialized.
     """
+
+    on = SecretStorageEvents()
 
     def __init__(
         self,
@@ -65,6 +64,7 @@ class SecretStorage(ops.Object, abc.ABC):
         for key, value in self._initial_values.items():
             if not relation_data.get(key):
                 relation_data[key] = value
+        self.on.secret_storage_ready.emit()
 
     @property
     def is_initialized(self) -> bool:

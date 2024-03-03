@@ -19,9 +19,7 @@ class RunOnceStatus(str, enum.Enum):
 
 
 class RunOnce:
-    def __init__(
-        self, charm: ops.CharmBase, container: str, name: str, base_dir: pathlib.Path
-    ):
+    def __init__(self, charm: ops.CharmBase, container: str, name: str, base_dir: pathlib.Path):
         self._charm = charm
         self._container = self._charm.unit.get_container(container)
         self._name = name
@@ -36,14 +34,14 @@ class RunOnce:
             return RunOnceStatus(self._container.pull(self._state_file).read())
 
     def run(
-        self, command: list[str], environment: dict[str, str], working_dir: str
+        self, command: list[str], environment: dict[str, str], working_dir: str, user: str
     ) -> bool:
         if self.get_status() == RunOnceStatus.COMPLETED:
             return True
         try:
             self._container.make_dir(self._state_dir, make_parents=True)
             proc = self._container.exec(
-                command=command, environment=environment, working_dir=working_dir
+                command=command, environment=environment, working_dir=working_dir, user=user
             )
             stdout, stderr = proc.wait_output()
             logger.info(

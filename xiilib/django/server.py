@@ -86,7 +86,9 @@ class GunicornServer:
             self._container.get_plan().services[self._service_name].command
         )
         check_command.append("--check-config")
-        exec_process = self._container.exec(check_command, environment=env)
+        exec_process = self._container.exec(
+            check_command, environment=env, user="_daemon_", working_dir=self._working_dir
+        )
         try:
             exec_process.wait_output()
         except ops.pebble.ExecError as exc:
