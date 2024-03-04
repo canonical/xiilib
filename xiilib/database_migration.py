@@ -82,6 +82,8 @@ class DatabaseMigration:
         Returns:
             One of "PENDING", "COMPLETED", or "FAILED".
         """
+        if not self._container.can_connect():
+            return DatabaseMigrationStatus.PENDING
         return (
             DatabaseMigrationStatus.PENDING
             if not self._container.exists(self._status_file)
