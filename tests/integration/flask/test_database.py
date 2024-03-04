@@ -3,7 +3,9 @@
 # See LICENSE file for licensing details.
 
 """Integration tests for Flask charm database integration."""
+import asyncio
 import logging
+import time
 
 import juju
 import ops
@@ -47,6 +49,7 @@ async def test_with_database(
     if trust:
         deploy_cmd.extend(["--trust"])
     await ops_test.juju(*deploy_cmd)
+
     # mypy doesn't see that ActiveStatus has a name
     await model.wait_for_idle(status=ops.ActiveStatus.name)  # type: ignore
 
@@ -56,6 +59,10 @@ async def test_with_database(
     await model.wait_for_idle(status=ops.ActiveStatus.name)  # type: ignore
 
     for unit_ip in await get_unit_ips(flask_app.name):
-        response = requests.get(f"http://{unit_ip}:8000/{endpoint}", timeout=5)
-        assert response.status_code == 200
+        for _ in range(10):
+            response = requests.get(f"http://{unit_ip}:8000/{endpoint}", timeout=5)
+            assert response.status_code == 200
+            if "SUCCESS" == response.text:
+                return
+            await asyncio.sleep(60)
         assert "SUCCESS" == response.text

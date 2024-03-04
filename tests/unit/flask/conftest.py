@@ -4,6 +4,7 @@
 """pytest fixtures for the integration test."""
 import os
 import pathlib
+import shlex
 import typing
 import unittest.mock
 
@@ -13,7 +14,8 @@ from ops.testing import Harness
 
 from examples.flask.src.charm import FlaskCharm
 from xiilib.database_migration import DatabaseMigrationStatus
-from xiilib.flask.constants import FLASK_CONTAINER_NAME
+
+from .constants import DEFAULT_LAYER, FLASK_CONTAINER_NAME
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent.parent.parent
 
@@ -39,17 +41,13 @@ def harness_fixture() -> typing.Generator[Harness, None, None]:
             return ops.testing.ExecResult(0)
         return ops.testing.ExecResult(1)
 
+    check_config_command = [
+        *shlex.split(DEFAULT_LAYER["services"]["flask"]["command"]),
+        "--check-config",
+    ]
     harness.handle_exec(
         FLASK_CONTAINER_NAME,
-        [
-            "python3",
-            "-m",
-            "gunicorn",
-            "-c",
-            "/flask/gunicorn.conf.py",
-            "app:app",
-            "--check-config",
-        ],
+        check_config_command,
         handler=check_config_handler,
     )
 

@@ -11,7 +11,10 @@ import ops
 import yaml
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
 
-SUPPORTED_DB_INTERFACES = {"mysql_client": "mysql", "postgresql_client": "postgresql"}
+SUPPORTED_DB_INTERFACES = {
+    "mysql_client": "mysql",
+    "postgresql_client": "postgresql",
+}
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +75,7 @@ def get_uris(database_requirers: typing.Dict[str, DatabaseRequires]) -> typing.D
     for interface_name, db_requires in database_requirers.items():
         relation_data = list(
             db_requires.fetch_relation_data(
-                fields=["endpoints", "username", "password", "database"]
+                fields=["uris", "endpoints", "username", "password", "database"]
             ).values()
         )
 
@@ -83,6 +86,12 @@ def get_uris(database_requirers: typing.Dict[str, DatabaseRequires]) -> typing.D
         # with the same interface name. See: metadata.yaml
         data = relation_data[0]
 
+        env_name = f"{interface_name.upper()}_DB_CONNECT_STRING"
+
+        if "uris" in data:
+            db_uris[env_name] = data["uris"]
+            continue
+
         # Check that the relation data is well formed according to the following json_schema:
         # https://github.com/canonical/charm-relation-interfaces/blob/main/interfaces/mysql_client/v0/schemas/provider.json
         if not all(data.get(key) for key in ("endpoints", "username", "password")):
@@ -91,7 +100,7 @@ def get_uris(database_requirers: typing.Dict[str, DatabaseRequires]) -> typing.D
 
         database_name = data.get("database", db_requires.database)
         endpoint = data["endpoints"].split(",")[0]
-        db_uris[f"{interface_name.upper()}_DB_CONNECT_STRING"] = (
+        db_uris[env_name] = (
             f"{interface_name}://"
             f"{data['username']}:{data['password']}"
             f"@{endpoint}/{database_name}"
