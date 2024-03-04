@@ -3,7 +3,6 @@
 
 import os
 import time
-import urllib.parse
 from urllib.parse import urlparse
 
 import psycopg

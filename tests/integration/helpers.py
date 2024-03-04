@@ -12,15 +12,15 @@ import yaml
 
 def inject_venv(charm: pathlib.Path | str, src: pathlib.Path | str):
     """Inject a Python library into the charm venv directory inside a charm file."""
-    zip_file = zipfile.ZipFile(charm, "a")
-    src = pathlib.Path(src)
-    if not src.exists():
-        raise FileNotFoundError(f"Python library {src} not found")
-    for file in src.rglob("*"):
-        if "__pycache__" in str(file):
-            continue
-        rel_path = file.relative_to(src.parent)
-        zip_file.write(file, os.path.join("venv/", rel_path))
+    with zipfile.ZipFile(charm, "a") as zip_file:
+        src = pathlib.Path(src)
+        if not src.exists():
+            raise FileNotFoundError(f"Python library {src} not found")
+        for file in src.rglob("*"):
+            if "__pycache__" in str(file):
+                continue
+            rel_path = file.relative_to(src.parent)
+            zip_file.write(file, os.path.join("venv/", rel_path))
 
 
 def inject_charm_config(charm: pathlib.Path | str, config: dict, tmp_dir: pathlib.Path) -> str:
