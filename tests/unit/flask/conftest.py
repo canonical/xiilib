@@ -15,7 +15,7 @@ from ops.testing import Harness
 from examples.flask.src.charm import FlaskCharm
 from xiilib.database_migration import DatabaseMigrationStatus
 
-from .constants import DEFAULT_LAYER
+from .constants import DEFAULT_LAYER, FLASK_CONTAINER_NAME
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent.parent.parent
 
@@ -28,12 +28,11 @@ def cwd():
 @pytest.fixture(name="harness")
 def harness_fixture() -> typing.Generator[Harness, None, None]:
     """Ops testing framework harness fixture."""
-    container = "flask-app"
     harness = Harness(FlaskCharm)
     harness.set_leader()
-    root = harness.get_filesystem_root(container)
+    root = harness.get_filesystem_root(FLASK_CONTAINER_NAME)
     (root / "flask/app").mkdir(parents=True)
-    harness.set_can_connect(container, True)
+    harness.set_can_connect(FLASK_CONTAINER_NAME, True)
 
     def check_config_handler(_):
         """Handle the gunicorn check config command."""
@@ -47,7 +46,7 @@ def harness_fixture() -> typing.Generator[Harness, None, None]:
         "--check-config",
     ]
     harness.handle_exec(
-        container,
+        FLASK_CONTAINER_NAME,
         check_config_command,
         handler=check_config_handler,
     )

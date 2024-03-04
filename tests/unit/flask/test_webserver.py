@@ -17,7 +17,7 @@ from xiilib._gunicorn.charm_state import CharmState
 from xiilib._gunicorn.webserver import GunicornWebserver, WebserverConfig
 from xiilib._gunicorn.wsgi_app import WsgiApp
 
-from .constants import DEFAULT_LAYER
+from .constants import DEFAULT_LAYER, FLASK_CONTAINER_NAME
 
 GUNICORN_CONFIG_TEST_PARAMS = [
     pytest.param(
@@ -62,8 +62,8 @@ def test_gunicorn_config(
     assert: gunicorn configuration file inside the flask app container should change accordingly.
     """
     harness.begin()
-    container: ops.Container = harness.model.unit.get_container("flask-app")
-    harness.set_can_connect("flask-app", True)
+    container: ops.Container = harness.model.unit.get_container(FLASK_CONTAINER_NAME)
+    harness.set_can_connect(FLASK_CONTAINER_NAME, True)
     container.add_layer("default", DEFAULT_LAYER)
 
     charm_state = CharmState(
@@ -100,7 +100,7 @@ def test_webserver_reload(monkeypatch, harness: Harness, is_running, database_mi
     assert: webserver object should send signal to the Gunicorn server based on the running status.
     """
     harness.begin()
-    container: ops.Container = harness.model.unit.get_container("flask-app")
+    container: ops.Container = harness.model.unit.get_container(FLASK_CONTAINER_NAME)
     harness.set_can_connect(container, True)
     container.add_layer("default", DEFAULT_LAYER)
 

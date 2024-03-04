@@ -23,3 +23,4 @@ DEFAULT_LAYER = {
         },
     }
 }
+FLASK_CONTAINER_NAME = "flask-app"

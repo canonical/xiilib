@@ -15,7 +15,7 @@ async def fixture_get_unit_ips(ops_test: OpsTest):
         """Retrieve unit ip addresses of a certain application.
 
         Returns:
-            a list containing unit ip addresses.
+            A list containing unit ip addresses.
         """
         _, status, _ = await ops_test.juju("status", "--format", "json")
         status = json.loads(status)

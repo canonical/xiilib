@@ -14,7 +14,7 @@ from xiilib._gunicorn.wsgi_app import WsgiApp
 from xiilib.database_migration import DatabaseMigration, DatabaseMigrationStatus
 from xiilib.exceptions import CharmConfigInvalidError
 
-from .constants import DEFAULT_LAYER
+from .constants import DEFAULT_LAYER, FLASK_CONTAINER_NAME
 
 
 def test_database_migration(harness: Harness):
@@ -25,7 +25,7 @@ def test_database_migration(harness: Harness):
         first successful run.
     """
     harness.begin()
-    container: ops.Container = harness.model.unit.get_container("flask-app")
+    container: ops.Container = harness.model.unit.get_container(FLASK_CONTAINER_NAME)
     container.add_layer("default", DEFAULT_LAYER)
     root = harness.get_filesystem_root(container)
     harness.set_can_connect(container, True)
@@ -93,7 +93,7 @@ def test_database_migrate_command(harness: Harness, file: str, command: list[str
     assert: database migration should run different command accordingly
     """
     harness.begin()
-    container: ops.Container = harness.model.unit.get_container("flask-app")
+    container: ops.Container = harness.model.unit.get_container(FLASK_CONTAINER_NAME)
     container.add_layer("default", DEFAULT_LAYER)
     root = harness.get_filesystem_root(container)
     (root / "flask/app" / file).touch()
@@ -133,7 +133,7 @@ def test_database_migration_status(harness: Harness):
     assert: database migration instance should report correct status.
     """
     harness.begin()
-    container = harness.charm.unit.get_container("flask-app")
+    container = harness.charm.unit.get_container(FLASK_CONTAINER_NAME)
     container.add_layer("default", DEFAULT_LAYER)
 
     harness.handle_exec(container, [], result=1)

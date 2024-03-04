@@ -42,7 +42,7 @@ class WsgiApp:  # pylint: disable=too-few-public-methods
         """Encode the environment variable values.
 
         Args:
-            value: the input environment variable value.
+            value: The input environment variable value.
 
         Return:
             The original string if the input is a string, or JSON encoded value.

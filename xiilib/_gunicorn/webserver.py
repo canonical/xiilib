@@ -139,7 +139,7 @@ statsd_host = {repr(self._charm_state.statsd_host)}
         Args:
             environment: Environment variables used to run the application.
             is_webserver_running: Indicates if the web server container is currently running.
-            command: the WSGI application startup command.
+            command: The WSGI application startup command.
 
         Raises:
             CharmConfigInvalidError: if the charm configuration is not valid.

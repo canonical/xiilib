@@ -15,7 +15,7 @@ from xiilib._gunicorn.webserver import GunicornWebserver
 from xiilib._gunicorn.wsgi_app import WsgiApp
 from xiilib.flask import Charm
 
-from .constants import DEFAULT_LAYER
+from .constants import DEFAULT_LAYER, FLASK_CONTAINER_NAME
 
 
 def test_flask_pebble_layer(harness: Harness) -> None:
@@ -25,7 +25,7 @@ def test_flask_pebble_layer(harness: Harness) -> None:
     assert: flask charm should submit the correct flaks pebble layer to pebble.
     """
     harness.begin()
-    container = harness.charm.unit.get_container("flask-app")
+    container = harness.charm.unit.get_container(FLASK_CONTAINER_NAME)
     # ops.testing framework apply layers by label in lexicographical order...
     container.add_layer("a_layer", DEFAULT_LAYER)
     secret_storage = unittest.mock.MagicMock()
