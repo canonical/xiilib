@@ -126,6 +126,10 @@ class WsgiApp:  # pylint: disable=too-few-public-methods
             migration_command = ["python", "migrate.py"]
         if migration_command:
             self._database_migration.run(
-                migration_command, self._wsgi_environment(), working_dir=app_dir
+                command=migration_command,
+                environment=self._wsgi_environment(),
+                working_dir=app_dir,
+                user=self._charm_state.user,
+                group=self._charm_state.group,
             )
         self._container.replan()

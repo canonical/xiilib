@@ -51,10 +51,14 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         container_name: The name of the WSGI application container.
         base_dir: The project base directory in the WSGI application container.
         app_dir: The WSGI application directory in the WSGI application container.
+        user: The UNIX user name for running the service.
+        group: The UNIX group name for running the service
     """
 
     statsd_host = "localhost:9125"
     port = 8000
+    user = "_daemon_"
+    group = "_daemon_"
 
     def __init__(  # pylint: disable=too-many-arguments
         self,

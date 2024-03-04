@@ -67,8 +67,13 @@ class DatabaseMigration:
         """
         self._container.push(self._status_file, source=status, make_dirs=True)
 
-    def run(
-        self, command: list[str], environment: dict[str, str], working_dir: pathlib.Path
+    def run(  # pylint: disable=too-many-arguments
+        self,
+        command: list[str],
+        environment: dict[str, str],
+        working_dir: pathlib.Path,
+        user: str | None = None,
+        group: str | None = None,
     ) -> None:
         """Run the database migration script if database migration is still pending.
 
@@ -76,6 +81,8 @@ class DatabaseMigration:
             command: The database migration command to run.
             environment: Environment variables that's required for the run.
             working_dir: Working directory for the database migration run.
+            user: The user to run the database migration.
+            group: The group to run the database migration.
 
         Raises:
             CharmConfigInvalidError: if the database migration run failed.
@@ -91,6 +98,8 @@ class DatabaseMigration:
                 command,
                 environment=environment,
                 working_dir=str(working_dir),
+                user=user,
+                group=group,
             ).wait_output()
             self._set_status(DatabaseMigrationStatus.COMPLETED)
             logger.info(
