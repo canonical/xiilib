@@ -28,12 +28,11 @@ def cwd():
 @pytest.fixture(name="harness")
 def harness_fixture() -> typing.Generator[Harness, None, None]:
     """Ops testing framework harness fixture."""
-    container = "flask-app"
     harness = Harness(FlaskCharm)
     harness.set_leader()
-    root = harness.get_filesystem_root(container)
+    root = harness.get_filesystem_root(FLASK_CONTAINER_NAME)
     (root / "flask/app").mkdir(parents=True)
-    harness.set_can_connect(container, True)
+    harness.set_can_connect(FLASK_CONTAINER_NAME, True)
 
     def check_config_handler(_):
         """Handle the gunicorn check config command."""
