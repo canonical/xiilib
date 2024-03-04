@@ -79,6 +79,9 @@ class WebserverConfig:
 class GunicornWebserver:  # pylint: disable=too-few-public-methods
     """A class representing a Gunicorn web server."""
 
+    _GROUP = "_daemon_"
+    _USER = "_daemon_"
+
     def __init__(
         self,
         charm_state: "CharmState",
@@ -181,4 +184,4 @@ statsd_host = {repr(self._charm_state.statsd_host)}
         ):
             log_dir = str(log.parent.absolute())
             if not container.exists(log_dir):
-                container.make_dir(log_dir, make_parents=True, user="_daemon_", group="_daemon_")
+                container.make_dir(log_dir, make_parents=True, user=self._USER, group=self._GROUP)

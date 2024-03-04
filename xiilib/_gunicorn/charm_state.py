@@ -53,6 +53,9 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         app_dir: The WSGI application directory in the WSGI application container.
     """
 
+    statsd_host = "localhost:9125"
+    port = 8000
+
     def __init__(  # pylint: disable=too-many-arguments
         self,
         *,
@@ -114,7 +117,7 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         app_config = {
             k.replace("-", "_"): v
             for k, v in charm.config.items()
-            if not any(k.startswith(prefix) for prefix in ("flask-", "webserver-"))
+            if not any(k.startswith(prefix) for prefix in ("django-", "flask-", "webserver-"))
         }
         app_config = {k: v for k, v in app_config.items() if k not in wsgi_config.dict().keys()}
         return cls(
@@ -162,24 +165,6 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
             The value of user-defined application configurations.
         """
         return self._app_config
-
-    @property
-    def port(self) -> int:
-        """Gets the port number to use for the Gunicorn server.
-
-        Returns:
-            The port number to use for the Gunicorn server.
-        """
-        return 8000
-
-    @property
-    def statsd_host(self) -> str:
-        """Returns the statsd server host for Gunicorn metrics.
-
-        Returns:
-            The statsd server host for Gunicorn metrics.
-        """
-        return "localhost:9125"
 
     @property
     def secret_key(self) -> str:
