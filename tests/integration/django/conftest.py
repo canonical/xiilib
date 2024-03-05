@@ -20,7 +20,7 @@ PROJECT_ROOT = pathlib.Path(__file__).parent.parent.parent.parent
 
 @pytest.fixture(autouse=True)
 def cwd():
-    return os.chdir(PROJECT_ROOT / "examples/flask")
+    return os.chdir(PROJECT_ROOT / "examples/django/charm")
 
 
 @pytest.fixture(scope="module", name="django_app_image")
@@ -30,13 +30,6 @@ def fixture_django_app_image(pytestconfig: Config):
     if not image:
         raise ValueError("the following arguments are required: --django-app-image")
     return image
-
-
-@pytest_asyncio.fixture(scope="module", name="model")
-async def fixture_model(ops_test: OpsTest) -> Model:
-    """Return the current testing juju model."""
-    assert ops_test.model
-    return ops_test.model
 
 
 @pytest_asyncio.fixture(scope="module", name="charm_file")
