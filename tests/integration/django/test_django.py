@@ -37,7 +37,7 @@ async def test_django_webserver_timeout(django_app, get_unit_ips, timeout):
             )
 
 
-async def test_flask_database_migration(django_app, get_unit_ips):
+async def test_django_database_migration(django_app, get_unit_ips):
     """
     arrange: build and deploy the django charm with database migration enabled.
     act: access an endpoint requiring database.
@@ -68,3 +68,21 @@ async def test_django_charm_config(django_app, expected_settings, get_unit_ips):
         for setting, value in expected_settings.items():
             url = f"http://{unit_ip}:8000/settings/{setting}"
             assert value == requests.get(url, timeout=5).json()
+
+
+async def test_django_create_superuser(django_app, get_unit_ips, run_action):
+    """
+    arrange: build and deploy the django charm.
+    act: create a superuser using the create-superuser action.
+    assert: a superuser is created by the charm.
+    """
+    result = await run_action(
+        django_app.name, "create-superuser", email="test@example.com", username="test"
+    )
+    password = result["password"]
+    for unit_ip in await get_unit_ips(django_app.name):
+        assert requests.get(
+            f"http://{unit_ip}:8000/login",
+            params={"username": "test", "password": password},
+            timeout=1,
+        ).ok

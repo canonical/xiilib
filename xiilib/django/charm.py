@@ -47,7 +47,7 @@ class Charm(GunicornBase):  # pylint: disable=too-many-instance-attributes
         """
         super().__init__(framework=framework, wsgi_framework="django")
         self.framework.observe(self.on.django_app_pebble_ready, self._on_django_app_pebble_ready)
-        self.framework.observe(self.on.create_super_user_action, self._on_create_super_user_action)
+        self.framework.observe(self.on.create_superuser_action, self._on_create_superuser_action)
 
     def get_wsgi_config(self) -> BaseModel:
         """Return Django framework related configurations.
@@ -88,8 +88,8 @@ class Charm(GunicornBase):  # pylint: disable=too-many-instance-attributes
         """Handle the pebble-ready event."""
         self.restart()
 
-    def _on_create_super_user_action(self, event: ops.ActionEvent) -> None:
-        """Handle the create-super-user action.
+    def _on_create_superuser_action(self, event: ops.ActionEvent) -> None:
+        """Handle the create-superuser action.
 
         Args:
             event: the action event object.

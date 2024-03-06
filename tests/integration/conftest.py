@@ -65,3 +65,14 @@ def loki_app_name_fixture() -> str:
 def grafana_app_name_fixture() -> str:
     """Return the name of the grafana application deployed for tests."""
     return "grafana-k8s"
+
+
+@pytest_asyncio.fixture
+def run_action(ops_test: OpsTest):
+    async def _run_action(application_name, action_name, **params):
+        app = ops_test.model.applications[application_name]
+        action = await app.units[0].run_action(action_name, **params)
+        await action.wait()
+        return action.results
+
+    return _run_action

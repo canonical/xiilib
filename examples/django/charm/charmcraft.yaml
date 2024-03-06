@@ -19,7 +19,7 @@ actions:
   rotate-secret-key:
     description: Rotate the django secret key. Users will be forced to log in again.
       This might be useful if a security breach occurs.
-  create-super-user:
+  create-superuser:
     description: Create a new Django superuser account.
     params:
       username:

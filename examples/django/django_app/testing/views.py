@@ -5,6 +5,7 @@ import os
 import time
 
 from django.conf import settings
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.http import HttpResponse, JsonResponse
 
@@ -27,4 +28,12 @@ def get_settings(request, name):
 def sleep(request):
     duration = request.GET.get("duration")
     time.sleep(int(duration))
-    return HttpResponse("")
+    return HttpResponse()
+
+
+def login(request):
+    user = authenticate(username=request.GET.get("username"), password=request.GET.get("password"))
+    if user is not None:
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=403)
