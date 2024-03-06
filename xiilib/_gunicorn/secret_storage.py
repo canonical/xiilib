@@ -28,7 +28,6 @@ class GunicornSecretStorage(xiilib.secret_storage.SecretStorage):
             key: The secret key name stored in the relation data.
         """
         super().__init__(charm=charm, keys=[key])
-        self._charm = charm
         self._key = key
 
     def get_secret_key(self) -> str:
