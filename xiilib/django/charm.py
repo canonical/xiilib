@@ -7,6 +7,7 @@
 import itertools
 import logging
 import pathlib
+import secrets
 import typing
 
 import ops
@@ -46,6 +47,7 @@ class Charm(GunicornBase):  # pylint: disable=too-many-instance-attributes
         """
         super().__init__(framework=framework, wsgi_framework="django")
         self.framework.observe(self.on.django_app_pebble_ready, self._on_django_app_pebble_ready)
+        self.framework.observe(self.on.create_super_user_action, self._on_create_super_user_action)
 
     def get_wsgi_config(self) -> BaseModel:
         """Return Django framework related configurations.
@@ -85,3 +87,28 @@ class Charm(GunicornBase):  # pylint: disable=too-many-instance-attributes
     def _on_django_app_pebble_ready(self, _: ops.PebbleReadyEvent) -> None:
         """Handle the pebble-ready event."""
         self.restart()
+
+    def _on_create_super_user_action(self, event: ops.ActionEvent) -> None:
+        """Handle the create-super-user action.
+
+        Args:
+            event: the action event object.
+        """
+        if not self.is_ready():
+            event.fail("django-app container is not ready")
+        try:
+            password = secrets.token_urlsafe(16)
+            self._container.exec(
+                ["python", "manage.py", "createsuperuser", "--noinput"],
+                environment={
+                    "DJANGO_SUPERUSER_PASSWORD": password,
+                    "DJANGO_SUPERUSER_USERNAME": event.params["username"],
+                    "DJANGO_SUPERUSER_EMAIL": event.params["email"],
+                    **self._wsgi_app.gen_environment(),
+                },
+                combine_stderr=True,
+                working_dir=str(self._charm_state.app_dir),
+            ).wait_output()
+            event.set_results({"password": password})
+        except ops.pebble.ExecError as e:
+            event.fail(str(e.stdout))

@@ -46,7 +46,7 @@ def test_flask_env(flask_config: dict, app_config: dict, database_migration_mock
         webserver=unittest.mock.MagicMock(),
         database_migration=database_migration_mock,
     )
-    env = flask_app._wsgi_environment()
+    env = flask_app.gen_environment()
     assert env["FLASK_SECRET_KEY"] == "foobar"
     del env["FLASK_SECRET_KEY"]
     assert env == {
@@ -108,7 +108,7 @@ def test_http_proxy(
         webserver=unittest.mock.MagicMock(),
         database_migration=database_migration_mock,
     )
-    env = flask_app._wsgi_environment()
+    env = flask_app.gen_environment()
     expected_env: typing.Dict[str, typing.Optional[str]] = {
         "http_proxy": None,
         "https_proxy": None,
