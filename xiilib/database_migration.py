@@ -67,7 +67,9 @@ class DatabaseMigration:
         """
         self._container.push(self._status_file, source=status, make_dirs=True)
 
-    def run(  # pylint: disable=too-many-arguments
+    # disable the too-many-arguments check because it's a wrapper around `ops.Container.exec`
+    # pylint: disable=too-many-arguments
+    def run(
         self,
         command: list[str],
         environment: dict[str, str],
