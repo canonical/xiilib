@@ -31,8 +31,8 @@ class DjangoConfig(BaseModel, extra=Extra.allow):  # pylint: disable=too-few-pub
         allowed_hosts: a list of host/domain names that this Django site can serve.
     """
 
-    debug: bool | None = Field(None)
-    secret_key: str | None = Field(None, min_length=1)
+    debug: bool | None = Field(default=None)
+    secret_key: str | None = Field(default=None, min_length=1)
     allowed_hosts: list[str]
 
 
@@ -68,7 +68,7 @@ class Charm(GunicornBase):  # pylint: disable=too-many-instance-attributes
         else:
             django_config["allowed_hosts"] = []
         try:
-            return DjangoConfig(**django_config)  # type: ignore
+            return DjangoConfig.model_validate(django_config)
         except ValidationError as exc:
             error_fields = set(
                 itertools.chain.from_iterable(error["loc"] for error in exc.errors())

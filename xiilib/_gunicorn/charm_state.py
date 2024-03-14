@@ -10,7 +10,7 @@ import ops
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
 
 # pydantic is causing this no-name-in-module problem
-from pydantic import AnyHttpUrl, BaseModel, parse_obj_as  # pylint: disable=no-name-in-module
+from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module
 
 from xiilib._gunicorn.secret_storage import GunicornSecretStorage
 from xiilib._gunicorn.webserver import WebserverConfig
@@ -26,9 +26,9 @@ class ProxyConfig(BaseModel):  # pylint: disable=too-few-public-methods
         no_proxy: Comma separated list of hostnames to bypass proxy.
     """
 
-    http_proxy: typing.Optional[AnyHttpUrl]
-    https_proxy: typing.Optional[AnyHttpUrl]
-    no_proxy: typing.Optional[str]
+    http_proxy: str | None = Field(default=None, pattern="https?://.+")
+    https_proxy: str | None = Field(default=None, pattern="https?://.+")
+    no_proxy: typing.Optional[str] = None
 
 
 # too-many-instance-attributes is okay since we use a factory function to construct the CharmState
@@ -147,8 +147,8 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         https_proxy = os.environ.get("JUJU_CHARM_HTTPS_PROXY")
         no_proxy = os.environ.get("JUJU_CHARM_NO_PROXY")
         return ProxyConfig(
-            http_proxy=parse_obj_as(AnyHttpUrl, http_proxy) if http_proxy else None,
-            https_proxy=parse_obj_as(AnyHttpUrl, https_proxy) if https_proxy else None,
+            http_proxy=http_proxy,
+            https_proxy=https_proxy,
             no_proxy=no_proxy,
         )
 
