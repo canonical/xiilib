@@ -147,8 +147,8 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         https_proxy = os.environ.get("JUJU_CHARM_HTTPS_PROXY")
         no_proxy = os.environ.get("JUJU_CHARM_NO_PROXY")
         return ProxyConfig(
-            http_proxy=http_proxy,
-            https_proxy=https_proxy,
+            http_proxy=http_proxy if http_proxy else None,
+            https_proxy=https_proxy if https_proxy else None,
             no_proxy=no_proxy,
         )
 
