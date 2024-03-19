@@ -121,7 +121,7 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         app_config = {
             k.replace("-", "_"): v
             for k, v in charm.config.items()
-            if not any(k.startswith(prefix) for prefix in ("django-", "flask-", "webserver-"))
+            if not any(k.startswith(prefix) for prefix in (f"{framework}-", "webserver-"))
         }
         app_config = {k: v for k, v in app_config.items() if k not in wsgi_config.dict().keys()}
         return cls(
