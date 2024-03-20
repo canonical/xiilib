@@ -10,7 +10,7 @@ import ops
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
 
 # pydantic is causing this no-name-in-module problem
-from pydantic import AnyHttpUrl, BaseModel, parse_obj_as  # pylint: disable=no-name-in-module
+from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module
 
 from xiilib._gunicorn.secret_storage import GunicornSecretStorage
 from xiilib._gunicorn.webserver import WebserverConfig
@@ -26,9 +26,9 @@ class ProxyConfig(BaseModel):  # pylint: disable=too-few-public-methods
         no_proxy: Comma separated list of hostnames to bypass proxy.
     """
 
-    http_proxy: typing.Optional[AnyHttpUrl]
-    https_proxy: typing.Optional[AnyHttpUrl]
-    no_proxy: typing.Optional[str]
+    http_proxy: str | None = Field(default=None, pattern="https?://.+")
+    https_proxy: str | None = Field(default=None, pattern="https?://.+")
+    no_proxy: typing.Optional[str] = None
 
 
 # too-many-instance-attributes is okay since we use a factory function to construct the CharmState
@@ -51,7 +51,14 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         container_name: The name of the WSGI application container.
         base_dir: The project base directory in the WSGI application container.
         app_dir: The WSGI application directory in the WSGI application container.
+        user: The UNIX user name for running the service.
+        group: The UNIX group name for running the service
     """
+
+    statsd_host = "localhost:9125"
+    port = 8000
+    user = "_daemon_"
+    group = "_daemon_"
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -114,7 +121,7 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         app_config = {
             k.replace("-", "_"): v
             for k, v in charm.config.items()
-            if not any(k.startswith(prefix) for prefix in ("flask-", "webserver-"))
+            if not any(k.startswith(prefix) for prefix in (f"{framework}-", "webserver-"))
         }
         app_config = {k: v for k, v in app_config.items() if k not in wsgi_config.dict().keys()}
         return cls(
@@ -140,8 +147,8 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
         https_proxy = os.environ.get("JUJU_CHARM_HTTPS_PROXY")
         no_proxy = os.environ.get("JUJU_CHARM_NO_PROXY")
         return ProxyConfig(
-            http_proxy=parse_obj_as(AnyHttpUrl, http_proxy) if http_proxy else None,
-            https_proxy=parse_obj_as(AnyHttpUrl, https_proxy) if https_proxy else None,
+            http_proxy=http_proxy if http_proxy else None,
+            https_proxy=https_proxy if https_proxy else None,
             no_proxy=no_proxy,
         )
 
@@ -162,24 +169,6 @@ class CharmState:  # pylint: disable=too-many-instance-attributes
             The value of user-defined application configurations.
         """
         return self._app_config
-
-    @property
-    def port(self) -> int:
-        """Gets the port number to use for the Gunicorn server.
-
-        Returns:
-            The port number to use for the Gunicorn server.
-        """
-        return 8000
-
-    @property
-    def statsd_host(self) -> str:
-        """Returns the statsd server host for Gunicorn metrics.
-
-        Returns:
-            The statsd server host for Gunicorn metrics.
-        """
-        return "localhost:9125"
 
     @property
     def secret_key(self) -> str:

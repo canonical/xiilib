@@ -155,7 +155,13 @@ statsd_host = {repr(self._charm_state.statsd_host)}
             return
         check_config_command = shlex.split(command)
         check_config_command.append("--check-config")
-        exec_process = self._container.exec(check_config_command, environment=environment)
+        exec_process = self._container.exec(
+            check_config_command,
+            environment=environment,
+            user=self._charm_state.user,
+            group=self._charm_state.group,
+            working_dir=str(self._charm_state.app_dir),
+        )
         try:
             exec_process.wait_output()
         except ExecError as exc:
@@ -181,4 +187,9 @@ statsd_host = {repr(self._charm_state.statsd_host)}
         ):
             log_dir = str(log.parent.absolute())
             if not container.exists(log_dir):
-                container.make_dir(log_dir, make_parents=True, user="_daemon_", group="_daemon_")
+                container.make_dir(
+                    log_dir,
+                    make_parents=True,
+                    user=self._charm_state.user,
+                    group=self._charm_state.group,
+                )

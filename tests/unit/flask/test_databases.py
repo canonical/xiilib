@@ -6,7 +6,6 @@
 import unittest.mock
 
 import pytest
-from ops.testing import Harness
 
 from xiilib.databases import get_uris
 

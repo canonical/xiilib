@@ -67,8 +67,9 @@ class GunicornBase(abc.ABC, ops.CharmBase):  # pylint: disable=too-many-instance
             charm_state=self._charm_state,
             container=self.unit.get_container(self._charm_state.container_name),
         )
+        self._container = self.unit.get_container(f"{self._charm_state.framework}-app")
         self._wsgi_app = WsgiApp(
-            container=self.unit.get_container(f"{self._charm_state.framework}-app"),
+            container=self._container,
             charm_state=self._charm_state,
             webserver=webserver,
             database_migration=self._database_migration,
@@ -152,8 +153,28 @@ class GunicornBase(abc.ABC, ops.CharmBase):  # pylint: disable=too-many-instance
         if self.unit.is_leader():
             self.app.status = status
 
+    def is_ready(self) -> bool:
+        """Check if the charm is ready to start the workload application.
+
+        Returns:
+            True if the charm is ready to start the workload application.
+        """
+        if not self._container.can_connect():
+            logger.info(
+                "pebble client in the %s container is not ready", self._charm_state.framework
+            )
+            self._update_app_and_unit_status(ops.WaitingStatus("Waiting for pebble ready"))
+            return False
+        if not self._charm_state.is_secret_storage_ready:
+            logger.info("secret storage is not initialized")
+            self._update_app_and_unit_status(ops.WaitingStatus("Waiting for peer integration"))
+            return False
+        return True
+
     def restart(self) -> None:
         """Restart or start the flask service if not started with the latest configuration."""
+        if not self.is_ready():
+            return
         try:
             self._wsgi_app.restart()
         except CharmConfigInvalidError as exc:

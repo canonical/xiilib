@@ -18,7 +18,7 @@ class GunicornSecretStorage(xiilib.secret_storage.SecretStorage):
         Returns:
             The initial secret values.
         """
-        return {self._key: secrets.token_urlsafe(32)}
+        return {self._key: secrets.token_urlsafe(64)}
 
     def __init__(self, charm: ops.CharmBase, key: str):
         """Initialize the SecretStorage with a given charm object.
@@ -28,7 +28,6 @@ class GunicornSecretStorage(xiilib.secret_storage.SecretStorage):
             key: The secret key name stored in the relation data.
         """
         super().__init__(charm=charm, keys=[key])
-        self._charm = charm
         self._key = key
 
     def get_secret_key(self) -> str:

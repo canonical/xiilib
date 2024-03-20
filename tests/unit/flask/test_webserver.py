@@ -85,7 +85,7 @@ def test_gunicorn_config(
     flask_app.restart()
     webserver.update_config(
         is_webserver_running=False,
-        environment=flask_app._wsgi_environment(),
+        environment=flask_app.gen_environment(),
         command=DEFAULT_LAYER["services"]["flask"]["command"],
     )
     assert container.pull(f"/flask/gunicorn.conf.py").read() == config_file
@@ -126,7 +126,7 @@ def test_webserver_reload(monkeypatch, harness: Harness, is_running, database_mi
     monkeypatch.setattr(container, "send_signal", send_signal_mock)
     webserver.update_config(
         is_webserver_running=is_running,
-        environment=flask_app._wsgi_environment(),
+        environment=flask_app.gen_environment(),
         command=DEFAULT_LAYER["services"]["flask"]["command"],
     )
     assert send_signal_mock.call_count == (1 if is_running else 0)

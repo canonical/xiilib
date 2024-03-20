@@ -49,7 +49,7 @@ class WsgiApp:  # pylint: disable=too-few-public-methods
         """
         return value if isinstance(value, str) else json.dumps(value)
 
-    def _wsgi_environment(self) -> dict[str, str]:
+    def gen_environment(self) -> dict[str, str]:
         """Generate a WSGI environment dictionary from the charm WSGI configurations.
 
         The WSGI environment generation follows these rules:
@@ -93,26 +93,18 @@ class WsgiApp:  # pylint: disable=too-few-public-methods
             self._container.push(original_services_file, json.dumps(services), make_dirs=True)
 
         services[self._charm_state.service_name]["override"] = "replace"
-        services[self._charm_state.service_name]["environment"] = self._wsgi_environment()
+        services[self._charm_state.service_name]["environment"] = self.gen_environment()
 
         return ops.pebble.LayerDict(services=services)
 
     def restart(self) -> None:
         """Restart or start the WSGI service if not started with the latest configuration."""
-        if not self._container.can_connect():
-            logger.info(
-                "pebble client in the %s container is not ready", self._charm_state.framework
-            )
-            return
-        if not self._charm_state.is_secret_storage_ready:
-            logger.info("secret storage is not initialized")
-            return
         self._container.add_layer("charm", self._wsgi_layer(), combine=True)
         service_name = self._charm_state.service_name
         is_webserver_running = self._container.get_service(service_name).is_running()
         command = self._wsgi_layer()["services"][self._charm_state.framework]["command"]
         self._webserver.update_config(
-            environment=self._wsgi_environment(),
+            environment=self.gen_environment(),
             is_webserver_running=is_webserver_running,
             command=command,
         )
@@ -126,6 +118,10 @@ class WsgiApp:  # pylint: disable=too-few-public-methods
             migration_command = ["python", "migrate.py"]
         if migration_command:
             self._database_migration.run(
-                migration_command, self._wsgi_environment(), working_dir=app_dir
+                command=migration_command,
+                environment=self.gen_environment(),
+                working_dir=app_dir,
+                user=self._charm_state.user,
+                group=self._charm_state.group,
             )
         self._container.replan()

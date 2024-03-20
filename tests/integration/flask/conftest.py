@@ -3,7 +3,6 @@
 
 """Fixtures for flask charm integration tests."""
 
-import json
 import os
 import pathlib
 
@@ -40,43 +39,6 @@ def fixture_test_db_flask_image(pytestconfig: Config):
     if not test_flask_image:
         raise ValueError("the following arguments are required: --test-db-flask-image")
     return test_flask_image
-
-
-@pytest_asyncio.fixture(scope="module", name="model")
-async def fixture_model(ops_test: OpsTest) -> Model:
-    """Return the current testing juju model."""
-    assert ops_test.model
-    return ops_test.model
-
-
-@pytest.fixture(scope="module", name="external_hostname")
-def external_hostname_fixture() -> str:
-    """Return the external hostname for ingress-related tests."""
-    return "juju.test"
-
-
-@pytest.fixture(scope="module", name="traefik_app_name")
-def traefik_app_name_fixture() -> str:
-    """Return the name of the traefik application deployed for tests."""
-    return "traefik-k8s"
-
-
-@pytest.fixture(scope="module", name="prometheus_app_name")
-def prometheus_app_name_fixture() -> str:
-    """Return the name of the prometheus application deployed for tests."""
-    return "prometheus-k8s"
-
-
-@pytest.fixture(scope="module", name="loki_app_name")
-def loki_app_name_fixture() -> str:
-    """Return the name of the prometheus application deployed for tests."""
-    return "loki-k8s"
-
-
-@pytest.fixture(scope="module", name="grafana_app_name")
-def grafana_app_name_fixture() -> str:
-    """Return the name of the grafana application deployed for tests."""
-    return "grafana-k8s"
 
 
 @pytest_asyncio.fixture(scope="module", name="charm_file")

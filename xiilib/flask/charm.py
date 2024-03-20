@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# pylint: disable=duplicate-code
 
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
@@ -17,7 +16,7 @@ from pydantic import (  # pylint: disable=no-name-in-module
     Extra,
     Field,
     ValidationError,
-    validator,
+    field_validator,
 )
 
 from xiilib._gunicorn.charm import GunicornBase
@@ -43,15 +42,15 @@ class FlaskConfig(BaseModel, extra=Extra.allow):  # pylint: disable=too-few-publ
             context in the Flask application.
     """
 
-    env: str | None = Field(None, min_length=1)
-    debug: bool | None = Field(None)
-    secret_key: str | None = Field(None, min_length=1)
-    permanent_session_lifetime: int | None = Field(None, gt=0)
-    application_root: str | None = Field(None, min_length=1)
-    session_cookie_secure: bool | None = Field(None)
-    preferred_url_scheme: str | None = Field(None, regex="(?i)^(HTTP|HTTPS)$")
+    env: str | None = Field(default=None, min_length=1)
+    debug: bool | None = Field(default=None)
+    secret_key: str | None = Field(default=None, min_length=1)
+    permanent_session_lifetime: int | None = Field(default=None, gt=0)
+    application_root: str | None = Field(default=None, min_length=1)
+    session_cookie_secure: bool | None = Field(default=None)
+    preferred_url_scheme: str | None = Field(default=None, pattern="(?i)^(HTTP|HTTPS)$")
 
-    @validator("preferred_url_scheme")
+    @field_validator("preferred_url_scheme")
     @staticmethod
     def to_upper(value: str) -> str:
         """Convert the string field to uppercase.
@@ -92,7 +91,7 @@ class Charm(GunicornBase):  # pylint: disable=too-many-instance-attributes
             if k.startswith("flask-")
         }
         try:
-            return FlaskConfig(**flask_config)  # type: ignore
+            return FlaskConfig.model_validate(flask_config)
         except ValidationError as exc:
             error_fields = set(
                 itertools.chain.from_iterable(error["loc"] for error in exc.errors())
