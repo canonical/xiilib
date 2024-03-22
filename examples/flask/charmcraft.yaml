@@ -103,8 +103,6 @@ requires:
   redis:
     interface: redis
     limit: 1
-  logging:
-    interface: loki_push_api
 
 assumes:
   - k8s-api
