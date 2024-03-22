@@ -103,10 +103,6 @@ requires:
   redis:
     interface: redis
     limit: 1
-
-assumes:
-  - k8s-api
-
 resources:
   flask-app-image:
     description: flask application image.

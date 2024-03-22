@@ -5,9 +5,10 @@
 
 import unittest.mock
 
+import ops.testing
 import pytest
 
-from xiilib.databases import get_uris
+from xiilib.databases import _RedisDatabaseRequiresShim, get_uris
 
 DATABASE_URL_TEST_PARAMS = [
     (
@@ -48,6 +49,10 @@ DATABASE_URL_TEST_PARAMS = [
     (
         ({"interface": "redis", "data": {"endpoints": "test:6379"}},),
         {"REDIS_DB_CONNECT_STRING": "redis://test:6379"},
+    ),
+    (
+        ({"interface": "mongodb", "data": {"uris": "mongodb://foobar/"}},),
+        {"MONGODB_DB_CONNECT_STRING": "mongodb://foobar/"},
     ),
     (
         (
@@ -103,3 +108,17 @@ def test_database_uri_mocked(
         _databases[interface] = database_require
 
     assert get_uris(_databases) == expected_output
+
+
+def test_redis_database_requires_shim(harness: ops.testing.Harness) -> None:
+    """
+    arrange: start the harness with redis relation data
+    act: call fetch_relation_data on the shim.
+    assert: fetch_relation_data() should return the correct data.
+    """
+    harness.add_relation("redis", "redis", unit_data={"hostname": "foobar", "port": "1234"})
+    harness.begin()
+    shim = _RedisDatabaseRequiresShim(harness.charm, relation_name="redis")
+    assert shim.fetch_relation_data(
+        fields=["uris", "endpoints", "username", "password", "database"]
+    ) == {0: {"endpoints": "foobar:1234"}}
