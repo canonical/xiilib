@@ -1,4 +1,4 @@
 cosl
 jsonschema >=4.19,<4.20
 ops >= 2.6
-pydantic >= 1.10,<2
+pydantic==2.6.4

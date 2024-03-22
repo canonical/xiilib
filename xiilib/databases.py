@@ -143,7 +143,7 @@ def get_uris(database_requirers: typing.Dict[str, DatabaseRequires]) -> typing.D
     for interface_name, db_requires in database_requirers.items():
         relation_data = list(
             db_requires.fetch_relation_data(
-                fields=["endpoints", "username", "password", "database"]
+                fields=["uris", "endpoints", "username", "password", "database"]
             ).values()
         )
 
@@ -159,6 +159,9 @@ def get_uris(database_requirers: typing.Dict[str, DatabaseRequires]) -> typing.D
         if interface_name == "redis":
             endpoint = data["endpoints"].split(",")[0]
             db_uris[env_name] = f"{interface_name}://{endpoint}"
+        if "uris" in data:
+            db_uris[env_name] = data["uris"]
+            continue
 
         # Check that the relation data is well formed according to the following json_schema:
         # https://github.com/canonical/charm-relation-interfaces/blob/main/interfaces/mysql_client/v0/schemas/provider.json

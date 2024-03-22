@@ -25,16 +25,8 @@ async def test_db_migration(
     """
     db_app = await model.deploy("postgresql-k8s", channel="14/stable", trust=True)
     await model.wait_for_idle()
-
     await model.add_relation(flask_db_app.name, db_app.name)
-
     await model.wait_for_idle(status="active", timeout=20 * 60)
-
-    for unit_ip in await get_unit_ips(flask_db_app.name):
-        assert requests.head(f"http://{unit_ip}:8000/tables/users", timeout=5).status_code == 404
-
-    await flask_db_app.set_config({"database_migration_script": "database-migration.sh"})
-    await model.wait_for_idle(status="active")
 
     for unit_ip in await get_unit_ips(flask_db_app.name):
         assert requests.head(f"http://{unit_ip}:8000/tables/users", timeout=5).status_code == 200
@@ -47,8 +39,3 @@ async def test_db_migration(
             f"http://{unit_ip}:8000/users", json=user_creation_request, timeout=5
         )
         assert response.status_code == 400
-
-    await flask_db_app.set_config({"database_migration_script": "database.sh"})
-    await model.wait_for_idle()
-
-    assert flask_db_app.status == "blocked"

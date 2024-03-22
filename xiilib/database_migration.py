@@ -5,7 +5,6 @@
 import enum
 import logging
 import pathlib
-import typing
 from typing import cast
 
 import ops
@@ -30,51 +29,23 @@ class DatabaseMigrationStatus(str, enum.Enum):
     PENDING = "PENDING"
 
 
-class DatabaseMigrationCharmState(typing.Protocol):  # pylint: disable=too-few-public-methods
-    """Charm state required for DatabaseMigration class.
-
-    Attrs:
-        database_migration_script: the database migration configuration, None for unset.
-    """
-
-    @property
-    def database_migration_script(self) -> str | None:
-        """Return the database migration script configuration.
-
-        Returns:
-            the database migration configuration, None for unset.
-        """
-
-
 class DatabaseMigration:
-    """The DatabaseMigration class that manages database migrations.
-
-    Attrs:
-        script: the database migration script.
-    """
+    """The DatabaseMigration class that manages database migrations."""
 
     def __init__(
         self,
         container: ops.Container,
-        charm_state: DatabaseMigrationCharmState,
         state_dir: pathlib.Path,
     ):
         """Initialize the DatabaseMigration instance.
 
         Args:
             container: The application container object.
-            charm_state: The charm state.
             state_dir: the directory in the application container to store migration states.
         """
         self._container = container
-        self._charm_state = charm_state
         self._status_file = state_dir / "database-migration-status"
         self._completed_script_file = state_dir / "completed-database-migration"
-
-    @property
-    def script(self) -> str | None:
-        """Get the database migration script."""
-        return self._charm_state.database_migration_script
 
     def get_status(self) -> DatabaseMigrationStatus:
         """Get the database migration run status.
@@ -84,7 +55,7 @@ class DatabaseMigration:
         """
         return (
             DatabaseMigrationStatus.PENDING
-            if not self._container.exists(self._status_file)
+            if not self._container.can_connect() or not self._container.exists(self._status_file)
             else DatabaseMigrationStatus(cast(str, self._container.pull(self._status_file).read()))
         )
 
@@ -96,30 +67,24 @@ class DatabaseMigration:
         """
         self._container.push(self._status_file, source=status, make_dirs=True)
 
-    def get_completed_script(self) -> str | None:
-        """Get the database migration script that has completed in the current container.
-
-        Returns:
-            The completed database migration script in the current container.
-        """
-        if self._container.exists(self._completed_script_file):
-            return cast(str, self._container.pull(self._completed_script_file).read())
-        return None
-
-    def _set_completed_script(self, script_path: str) -> None:
-        """Set the database migration script that has completed in the current container.
-
-        Args:
-            script_path: The completed database migration script in the current container.
-        """
-        self._container.push(self._completed_script_file, script_path, make_dirs=True)
-
-    def run(self, environment: dict[str, str], working_dir: pathlib.Path) -> None:
+    # disable the too-many-arguments check because it's a wrapper around `ops.Container.exec`
+    # pylint: disable=too-many-arguments
+    def run(
+        self,
+        command: list[str],
+        environment: dict[str, str],
+        working_dir: pathlib.Path,
+        user: str | None = None,
+        group: str | None = None,
+    ) -> None:
         """Run the database migration script if database migration is still pending.
 
         Args:
+            command: The database migration command to run.
             environment: Environment variables that's required for the run.
             working_dir: Working directory for the database migration run.
+            user: The user to run the database migration.
+            group: The group to run the database migration.
 
         Raises:
             CharmConfigInvalidError: if the database migration run failed.
@@ -129,26 +94,30 @@ class DatabaseMigration:
             DatabaseMigrationStatus.FAILED,
         ):
             return
-        if not self.script:
-            return
-        logger.info("execute database migration script: %s", repr(self.script))
+        logger.info("execute database migration command: %s", command)
         try:
-            self._container.exec(
-                ["/bin/bash", "-xeo", "pipefail", self.script],
+            stdout, stderr = self._container.exec(
+                command,
                 environment=environment,
                 working_dir=str(working_dir),
+                user=user,
+                group=group,
             ).wait_output()
             self._set_status(DatabaseMigrationStatus.COMPLETED)
-            self._set_completed_script(self.script)
+            logger.info(
+                "database migration command %s completed, stdout: %s, stderr: %s",
+                command,
+                stdout,
+                stderr,
+            )
         except ExecError as exc:
             self._set_status(DatabaseMigrationStatus.FAILED)
             logger.error(
-                "database migration script %s failed, stdout: %s, stderr: %s",
-                repr(self.script),
+                "database migration command %s failed, stdout: %s, stderr: %s",
+                command,
                 exc.stdout,
                 exc.stderr,
             )
             raise CharmConfigInvalidError(
-                f"database migration script {self.script!r} failed, "
-                "will retry in next update-status"
+                f"database migration command {command} failed, will retry in next update-status"
             ) from exc

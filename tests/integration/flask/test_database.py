@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Integration tests for Flask charm database integration."""
+import asyncio
 import logging
 import time
 
@@ -65,5 +66,5 @@ async def test_with_database(
             assert response.status_code == 200
             if "SUCCESS" == response.text:
                 return
-            time.sleep(60)
+            await asyncio.sleep(60)
         assert "SUCCESS" == response.text

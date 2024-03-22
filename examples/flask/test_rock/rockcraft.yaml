@@ -9,20 +9,5 @@ license: Apache-2.0
 platforms:
   amd64:
 
-parts:
-  flask-dependencies:
-    plugin: python
-    source: .
-    stage-packages:
-      - python3-venv
-    python-packages:
-      - gunicorn
-    python-requirements:
-      - requirements.txt
-  flask-app:
-    plugin: dump
-    source: .
-    organize:
-      "*": flask/app/
-    prime:
-      - flask/app
+extensions:
+  - flask-framework

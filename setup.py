@@ -10,9 +10,9 @@ requirements = requirements_txt.read_text(encoding="utf-8").splitlines()
 
 setup(
     name="xiilib",
-    version="0.1.0",
+    version="0.2.0",
     description="Companion library for 12-factor charms",
-    url="https://github.com/canonical/flask-k8s-operator",
+    url="https://github.com/canonical/xiilib",
     author="Canonical IS DevOps team",
     author_email="is-devops-team@canonical.com",
     install_requires=requirements,

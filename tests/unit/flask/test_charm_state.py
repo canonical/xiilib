@@ -7,32 +7,33 @@ import unittest.mock
 
 import pytest
 
+from xiilib._gunicorn.charm_state import CharmState
 from xiilib.exceptions import CharmConfigInvalidError
-from xiilib.flask.charm_state import CharmState
+from xiilib.flask.charm import Charm, FlaskConfig
 
 # this is a unit test file
 # pylint: disable=protected-access
 
-DEFAULT_CHARM_CONFIG = {"webserver_wsgi_path": "app:app", "flask_preferred_url_scheme": "HTTPS"}
+DEFAULT_CHARM_CONFIG = {"webserver-wsgi-path": "app:app", "flask-preferred-url-scheme": "HTTPS"}
 SECRET_STORAGE_MOCK = unittest.mock.MagicMock(is_initialized=True)
-SECRET_STORAGE_MOCK.get_flask_secret_key.return_value = ""
+SECRET_STORAGE_MOCK.get_secret_key.return_value = ""
 
 CHARM_STATE_FLASK_CONFIG_TEST_PARAMS = [
     pytest.param(
-        {"flask_env": "prod"}, {"env": "prod", "preferred_url_scheme": "HTTPS"}, id="env"
+        {"flask-env": "prod"}, {"env": "prod", "preferred_url_scheme": "HTTPS"}, id="env"
     ),
     pytest.param(
-        {"flask_debug": True}, {"debug": True, "preferred_url_scheme": "HTTPS"}, id="debug"
+        {"flask-debug": True}, {"debug": True, "preferred_url_scheme": "HTTPS"}, id="debug"
     ),
     pytest.param(
-        {"flask_secret_key": "1234"},
+        {"flask-secret-key": "1234"},
         {"secret_key": "1234", "preferred_url_scheme": "HTTPS"},
-        id="secret_key",
+        id="secret-key",
     ),
     pytest.param(
-        {"flask_preferred_url_scheme": "http"},
+        {"flask-preferred-url-scheme": "http"},
         {"preferred_url_scheme": "HTTP"},
-        id="preferred_url_scheme",
+        id="preferred-url-scheme",
     ),
 ]
 
@@ -46,22 +47,25 @@ def test_charm_state_flask_config(charm_config: dict, flask_config: dict) -> Non
     """
     config = copy.copy(DEFAULT_CHARM_CONFIG)
     config.update(charm_config)
+    charm = unittest.mock.MagicMock(config=config)
     charm_state = CharmState.from_charm(
+        framework="flask",
+        wsgi_config=Charm.get_wsgi_config(charm),
         secret_storage=SECRET_STORAGE_MOCK,
-        charm=unittest.mock.MagicMock(config=config),
-        database_uris={},
+        charm=charm,
+        database_requirers={},
     )
-    assert charm_state.flask_config == flask_config
+    assert charm_state.wsgi_config == flask_config
 
 
 @pytest.mark.parametrize(
     "charm_config",
     [
-        pytest.param({"flask_env": ""}, id="env"),
-        pytest.param({"flask_secret_key": ""}, id="secret_key"),
+        pytest.param({"flask-env": ""}, id="env"),
+        pytest.param({"flask-secret-key": ""}, id="secret-key"),
         pytest.param(
-            {"flask_preferred_url_scheme": "tls"},
-            id="preferred_url_scheme",
+            {"flask-preferred-url-scheme": "tls"},
+            id="preferred-url-scheme",
         ),
     ],
 )
@@ -73,11 +77,13 @@ def test_charm_state_invalid_flask_config(charm_config: dict) -> None:
     """
     config = copy.copy(DEFAULT_CHARM_CONFIG)
     config.update(charm_config)
+    charm = unittest.mock.MagicMock(config=config)
     with pytest.raises(CharmConfigInvalidError) as exc:
         CharmState.from_charm(
+            wsgi_config=Charm.get_wsgi_config(charm),
             secret_storage=SECRET_STORAGE_MOCK,
-            charm=unittest.mock.MagicMock(config=config),
-            database_uris={},
+            charm=charm,
+            database_requirers={},
         )
     for config_key in charm_config:
         assert config_key in exc.value.msg
