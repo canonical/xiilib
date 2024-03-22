@@ -8,6 +8,10 @@ jobs:
     uses: canonical/operator-workflows/.github/workflows/integration_test.yaml@main
     secrets: inherit
     with:
-      modules: '["test_charm", "test_proxy", "test_cos", "test_database", "test_db_migration", "test_default"]'
-      juju-channel: 3.3/stable
+      charmcraft-repository: weiiwang01/charmcraft
+      charmcraft-ref: update-12f
+      modules: '["test_charm", "test_proxy", "test_cos", "test_database", "test_db_migration", "test_django"]'
+      rockcraft-repository: weiiwang01/rockcraft
+      rockcraft-ref: add-django-framework
+      juju-channel: 3.1/stable
       channel: 1.29-strict/stable
