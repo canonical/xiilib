@@ -29,7 +29,7 @@ class Application(typing.Protocol):  # pylint: disable=too-few-public-methods
         """Restart the application."""
 
 
-class _RedisDatabaseRequiresShim:  # pylint: disable=too-few-public-methods
+class _RedisDatabaseRequiresShim(ops.Object):  # pylint: disable=too-few-public-methods
     """A shim to allow handling redis relation similar to other data platform databases."""
 
     class _RedisDatabaseRequiresEventShim:  # pylint: disable=too-few-public-methods
@@ -48,6 +48,8 @@ class _RedisDatabaseRequiresShim:  # pylint: disable=too-few-public-methods
             self.database_created = relation_changed
             self.endpoints_changed = relation_changed
 
+    _store = ops.StoredState()
+
     def __init__(self, charm: ops.CharmBase, relation_name: str):
         """Initialize the redis database requires.
 
@@ -55,15 +57,14 @@ class _RedisDatabaseRequiresShim:  # pylint: disable=too-few-public-methods
             charm: The requesting charm object.
             relation_name: The redis relation name.
         """
-        # we don't need store for Redis
-        self._redis = RedisRequires(
-            charm=charm, _stored=ops.StoredState(), relation_name=relation_name
-        )
+        super().__init__(charm, "redis-shim")
+        self._store.set_default(redis_relation={})
+        self._redis = RedisRequires(charm=charm, _stored=self._store, relation_name=relation_name)
         self.database = ""
         self.relation_name = relation_name
         relation = charm.model.get_relation(relation_name)
         self.relation_id = relation.id if relation else None
-        self.on = self._RedisDatabaseRequiresEventShim(charm.on.redis_relation_updated)
+        setattr(self, "on", self._RedisDatabaseRequiresEventShim(charm.on.redis_relation_updated))
 
     def fetch_relation_data(  # argument fields is used for matching the function signature
         self, fields: typing.List[str]  # pylint: disable=unused-argument
