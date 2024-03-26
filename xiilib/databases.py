@@ -4,20 +4,17 @@
 """Provide the Databases class to handle database relations and state."""
 
 import logging
-import pathlib
 import typing
-from unittest.mock import MagicMock
 
 import ops
-import yaml
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
-from charms.redis_k8s.v0.redis import RedisRequires
+
+from xiilib.helpers import load_requires
 
 SUPPORTED_DB_INTERFACES = {
     "mysql_client": "mysql",
     "postgresql_client": "postgresql",
     "mongodb_client": "mongodb",
-    "redis": "redis",
 }
 
 logger = logging.getLogger(__name__)
@@ -28,57 +25,6 @@ class Application(typing.Protocol):  # pylint: disable=too-few-public-methods
 
     def restart(self) -> None:
         """Restart the application."""
-
-
-class _RedisDatabaseRequiresShim:  # pylint: disable=too-few-public-methods
-    """A shim to allow handling redis relation similar to other data platform databases."""
-
-    class _RedisDatabaseRequiresEventShim:  # pylint: disable=too-few-public-methods
-        """A shim to provide redis database_created event as in the DatabaseRequires."""
-
-        def __init__(self, relation_changed: typing.Callable):
-            """Initialize the _RedisDatabaseRequiresEventShim object.
-
-            As we are checking the database relation later in the get_uris function.
-            We can use the charm's relation_changed event as database_created and
-            endpoints_changed event.
-
-            Args:
-                relation_changed: charm's redis relation changed event.
-            """
-            self.database_created = relation_changed
-            self.endpoints_changed = relation_changed
-
-    def __init__(self, charm: ops.CharmBase, relation_name: str):
-        """Initialize the redis database requires.
-
-        Args:
-            charm: The requesting charm object.
-            relation_name: The redis relation name.
-        """
-        # we don't need store for Redis
-        self._redis = RedisRequires(charm=charm, _stored=MagicMock(), relation_name=relation_name)
-        self.database = ""
-        self.relation_name = relation_name
-        relation = charm.model.get_relation(relation_name)
-        self.relation_id = relation.id if relation else None
-        self.on = self._RedisDatabaseRequiresEventShim(charm.on.redis_relation_updated)
-
-    def fetch_relation_data(  # argument fields is used for matching the function signature
-        self, fields: typing.List[str]  # pylint: disable=unused-argument
-    ) -> typing.Dict[int, typing.Dict[str, str]]:
-        """Mimic the fetch_relation_data method of DatabaseRequires class.
-
-        Args:
-            fields: fields to fetch from relation data.
-
-        Returns: required relation data.
-        """
-        data = {}
-        uri = self._redis.url
-        if uri and self.relation_id is not None:
-            data[self.relation_id] = {"uris": uri}
-        return data
 
 
 def make_database_requirers(
@@ -93,13 +39,9 @@ def make_database_requirers(
     Returns: A dictionary which is the database uri environment variable name and the
         value is the corresponding database requirer object.
     """
-    metadata_file = pathlib.Path("metadata.yaml")
-    if not metadata_file.exists():
-        metadata_file = pathlib.Path("charmcraft.yaml")
-    metadata = yaml.safe_load(metadata_file.read_text(encoding="utf-8"))
     db_interfaces = (
         SUPPORTED_DB_INTERFACES[require["interface"]]
-        for require in metadata["requires"].values()
+        for require in load_requires().values()
         if require["interface"] in SUPPORTED_DB_INTERFACES
     )
     # automatically create database relation requirers to manage database relations
@@ -112,8 +54,6 @@ def make_database_requirers(
                 relation_name=name,
                 database_name=database_name,
             )
-            if name != "redis"
-            else _RedisDatabaseRequiresShim(charm, relation_name=name)
         )
         for name in db_interfaces
     }
@@ -147,9 +87,6 @@ def get_uris(database_requirers: typing.Dict[str, DatabaseRequires]) -> typing.D
 
         env_name = f"{interface_name.upper()}_DB_CONNECT_STRING"
 
-        if interface_name == "redis":
-            endpoint = data["endpoints"].split(",")[0]
-            db_uris[env_name] = f"{interface_name}://{endpoint}"
         if "uris" in data:
             db_uris[env_name] = data["uris"]
             continue
