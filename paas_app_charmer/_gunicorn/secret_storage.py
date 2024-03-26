@@ -6,10 +6,10 @@ import secrets
 
 import ops
 
-import xiilib.secret_storage
+import paas_app_charmer.secret_storage
 
 
-class GunicornSecretStorage(xiilib.secret_storage.SecretStorage):
+class GunicornSecretStorage(paas_app_charmer.secret_storage.SecretStorage):
     """A class that manages secret keys required by the WSGI charms."""
 
     def gen_initial_value(self) -> dict[str, str]:

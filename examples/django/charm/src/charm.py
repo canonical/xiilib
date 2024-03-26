@@ -10,12 +10,12 @@ import typing
 
 import ops
 
-import xiilib.django
+import paas_app_charmer.django
 
 logger = logging.getLogger(__name__)
 
 
-class DjangoCharm(xiilib.django.Charm):
+class DjangoCharm(paas_app_charmer.django.Charm):
     """Django Charm service."""
 
     def __init__(self, *args: typing.Any) -> None:

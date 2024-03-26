@@ -12,9 +12,9 @@ from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
 # pydantic is causing this no-name-in-module problem
 from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module
 
-from xiilib._gunicorn.secret_storage import GunicornSecretStorage
-from xiilib._gunicorn.webserver import WebserverConfig
-from xiilib.databases import get_uris
+from paas_app_charmer._gunicorn.secret_storage import GunicornSecretStorage
+from paas_app_charmer._gunicorn.webserver import WebserverConfig
+from paas_app_charmer.databases import get_uris
 
 
 class ProxyConfig(BaseModel):  # pylint: disable=too-few-public-methods

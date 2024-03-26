@@ -8,7 +8,7 @@ import unittest.mock
 import ops.testing
 import pytest
 
-from xiilib.databases import _RedisDatabaseRequiresShim, get_uris
+from paas_app_charmer.databases import _RedisDatabaseRequiresShim, get_uris
 
 DATABASE_URL_TEST_PARAMS = [
     (

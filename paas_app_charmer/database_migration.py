@@ -10,7 +10,7 @@ from typing import cast
 import ops
 from ops.pebble import ExecError
 
-from xiilib.exceptions import CharmConfigInvalidError
+from paas_app_charmer.exceptions import CharmConfigInvalidError
 
 logger = logging.getLogger(__name__)
 

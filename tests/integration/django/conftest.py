@@ -38,7 +38,7 @@ async def charm_file_fixture(
 ) -> str:
     """Get the existing charm file."""
     charm_file = await ops_test.build_charm(PROJECT_ROOT / "examples/django/charm")
-    inject_venv(charm_file, PROJECT_ROOT / "xiilib")
+    inject_venv(charm_file, PROJECT_ROOT / "paas_app_charmer")
     return inject_charm_config(
         charm_file,
         {

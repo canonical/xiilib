@@ -13,10 +13,10 @@ import typing
 import ops
 from ops.pebble import ExecError, PathError
 
-from xiilib.exceptions import CharmConfigInvalidError
+from paas_app_charmer.exceptions import CharmConfigInvalidError
 
 if typing.TYPE_CHECKING:
-    from xiilib._gunicorn.charm_state import CharmState
+    from paas_app_charmer._gunicorn.charm_state import CharmState
 
 logger = logging.getLogger(__name__)
 
