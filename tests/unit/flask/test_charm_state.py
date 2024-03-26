@@ -7,9 +7,9 @@ import unittest.mock
 
 import pytest
 
-from xiilib._gunicorn.charm_state import CharmState
-from xiilib.exceptions import CharmConfigInvalidError
-from xiilib.flask.charm import Charm, FlaskConfig
+from paas_app_charmer._gunicorn.charm_state import CharmState
+from paas_app_charmer.exceptions import CharmConfigInvalidError
+from paas_app_charmer.flask.charm import Charm, FlaskConfig
 
 # this is a unit test file
 # pylint: disable=protected-access

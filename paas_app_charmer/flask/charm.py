@@ -19,8 +19,8 @@ from pydantic import (  # pylint: disable=no-name-in-module
     field_validator,
 )
 
-from xiilib._gunicorn.charm import GunicornBase
-from xiilib.exceptions import CharmConfigInvalidError
+from paas_app_charmer._gunicorn.charm import GunicornBase
+from paas_app_charmer.exceptions import CharmConfigInvalidError
 
 logger = logging.getLogger(__name__)
 

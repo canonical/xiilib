@@ -12,9 +12,9 @@ import unittest.mock
 
 import pytest
 
-from xiilib._gunicorn.charm_state import CharmState
-from xiilib._gunicorn.webserver import WebserverConfig
-from xiilib._gunicorn.wsgi_app import WsgiApp
+from paas_app_charmer._gunicorn.charm_state import CharmState
+from paas_app_charmer._gunicorn.webserver import WebserverConfig
+from paas_app_charmer._gunicorn.wsgi_app import WsgiApp
 
 
 @pytest.mark.parametrize(

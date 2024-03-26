@@ -11,14 +11,14 @@ from charms.data_platform_libs.v0.data_interfaces import DatabaseRequiresEvent
 from charms.traefik_k8s.v2.ingress import IngressPerAppRequirer
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 
-from xiilib._gunicorn.charm_state import CharmState
-from xiilib._gunicorn.observability import Observability
-from xiilib._gunicorn.secret_storage import GunicornSecretStorage
-from xiilib._gunicorn.webserver import GunicornWebserver
-from xiilib._gunicorn.wsgi_app import WsgiApp
-from xiilib.database_migration import DatabaseMigration, DatabaseMigrationStatus
-from xiilib.databases import Databases, make_database_requirers
-from xiilib.exceptions import CharmConfigInvalidError
+from paas_app_charmer._gunicorn.charm_state import CharmState
+from paas_app_charmer._gunicorn.observability import Observability
+from paas_app_charmer._gunicorn.secret_storage import GunicornSecretStorage
+from paas_app_charmer._gunicorn.webserver import GunicornWebserver
+from paas_app_charmer._gunicorn.wsgi_app import WsgiApp
+from paas_app_charmer.database_migration import DatabaseMigration, DatabaseMigrationStatus
+from paas_app_charmer.databases import Databases, make_database_requirers
+from paas_app_charmer.exceptions import CharmConfigInvalidError
 
 logger = logging.getLogger(__name__)
 
