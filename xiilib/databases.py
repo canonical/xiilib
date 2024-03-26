@@ -6,7 +6,6 @@
 import logging
 import pathlib
 import typing
-from unittest.mock import MagicMock
 
 import ops
 import yaml
@@ -57,7 +56,9 @@ class _RedisDatabaseRequiresShim:  # pylint: disable=too-few-public-methods
             relation_name: The redis relation name.
         """
         # we don't need store for Redis
-        self._redis = RedisRequires(charm=charm, _stored=MagicMock(), relation_name=relation_name)
+        self._redis = RedisRequires(
+            charm=charm, _stored=ops.StoredState(), relation_name=relation_name
+        )
         self.database = ""
         self.relation_name = relation_name
         relation = charm.model.get_relation(relation_name)
