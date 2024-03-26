@@ -118,7 +118,7 @@ def test_redis_database_requires_shim(harness: ops.testing.Harness) -> None:
     """
     harness.add_relation("redis", "redis", unit_data={"hostname": "foobar", "port": "1234"})
     harness.begin()
-    shim = _RedisDatabaseRequiresShim(harness.charm, relation_name="redis")
+    shim = harness.charm._database_requirers["redis"]
     assert shim.fetch_relation_data(
         fields=["uris", "endpoints", "username", "password", "database"]
-    ) == {0: {"endpoints": "foobar:1234"}}
+    ) == {0: {"uris": "redis://foobar:1234"}}

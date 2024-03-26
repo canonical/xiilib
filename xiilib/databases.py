@@ -6,10 +6,12 @@
 import logging
 import pathlib
 import typing
+from unittest.mock import MagicMock
 
 import ops
 import yaml
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
+from charms.redis_k8s.v0.redis import RedisRequires
 
 SUPPORTED_DB_INTERFACES = {
     "mysql_client": "mysql",
@@ -54,16 +56,16 @@ class _RedisDatabaseRequiresShim:  # pylint: disable=too-few-public-methods
             charm: The requesting charm object.
             relation_name: The redis relation name.
         """
-        self._charm = charm
-        self.relation_name = relation_name
-        # redis charm doesn't provide database id via the relation
+        # we don't need store for Redis
+        self._redis = RedisRequires(charm=charm, _stored=MagicMock(), relation_name=relation_name)
         self.database = ""
-        self.on = self._RedisDatabaseRequiresEventShim(
-            self._charm.on[relation_name].relation_changed
-        )
+        self.relation_name = relation_name
+        relation = charm.model.get_relation(relation_name)
+        self.relation_id = relation.id if relation else None
+        self.on = self._RedisDatabaseRequiresEventShim(charm.on.redis_relation_updated)
 
-    def fetch_relation_data(
-        self, fields: typing.List[str]
+    def fetch_relation_data(  # argument fields is used for matching the function signature
+        self, fields: typing.List[str]  # pylint: disable=unused-argument
     ) -> typing.Dict[int, typing.Dict[str, str]]:
         """Mimic the fetch_relation_data method of DatabaseRequires class.
 
@@ -73,20 +75,9 @@ class _RedisDatabaseRequiresShim:  # pylint: disable=too-few-public-methods
         Returns: required relation data.
         """
         data = {}
-        for relation in self._charm.model.relations[self.relation_name]:
-            endpoints = []
-            if relation.app is None:
-                continue
-            for unit in relation.units:
-                if not (hostname := relation.data[unit].get("hostname")):
-                    continue
-                if not (port := relation.data[unit].get("port")):
-                    continue
-                endpoints.append(f"{hostname}:{port}")
-            if endpoints:
-                data[relation.id] = (
-                    {"endpoints": ",".join(endpoints)} if "endpoints" in fields else {}
-                )
+        uri = self._redis.url
+        if uri and self.relation_id is not None:
+            data[self.relation_id] = {"uris": uri}
         return data
 
 

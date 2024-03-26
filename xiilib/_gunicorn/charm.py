@@ -8,6 +8,7 @@ import logging
 
 import ops
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequiresEvent
+from charms.redis_k8s.v0.redis import RedisRelationCharmEvents
 from charms.traefik_k8s.v2.ingress import IngressPerAppRequirer
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 
@@ -24,7 +25,11 @@ logger = logging.getLogger(__name__)
 
 
 class GunicornBase(abc.ABC, ops.CharmBase):  # pylint: disable=too-many-instance-attributes
-    """Gunicorn-based charm service mixin."""
+    """Gunicorn-based charm service mixin.
+
+    Attrs:
+        on: charm events replaced by Redis ones for the Redis charm library.
+    """
 
     @abc.abstractmethod
     def get_wsgi_config(self) -> BaseModel:
@@ -33,6 +38,8 @@ class GunicornBase(abc.ABC, ops.CharmBase):  # pylint: disable=too-many-instance
     @abc.abstractmethod
     def get_cos_dir(self) -> str:
         """Return the directory with COS related files."""
+
+    on = RedisRelationCharmEvents()
 
     def __init__(self, framework: ops.Framework, wsgi_framework: str) -> None:
         """Initialize the instance.
