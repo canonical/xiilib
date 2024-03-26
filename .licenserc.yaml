@@ -9,6 +9,7 @@ header:
     - '**'
   paths-ignore:
     - '.github/**'
+    - '.woke.yaml'
     - '**/*.json'
     - '**/*.j2'
     - '**/*.md'
