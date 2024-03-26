@@ -149,9 +149,6 @@ def get_uris(database_requirers: typing.Dict[str, DatabaseRequires]) -> typing.D
 
         env_name = f"{interface_name.upper()}_DB_CONNECT_STRING"
 
-        if interface_name == "redis":
-            endpoint = data["endpoints"].split(",")[0]
-            db_uris[env_name] = f"{interface_name}://{endpoint}"
         if "uris" in data:
             db_uris[env_name] = data["uris"]
             continue
